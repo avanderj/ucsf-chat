@@ -319,9 +319,9 @@ export function VersaChatWidget({
                   >
                     {/* Chat Bubble */}
                     <div
-                      className={`relative max-w-[85%] rounded-2xl px-4 py-3 transition-shadow ${message.sender === "user"
-                          ? "bg-[#052049] text-white shadow-md"
-                          : "bg-white border-2 border-gray-200 text-gray-900 shadow-sm"
+                      className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === "user"
+                          ? "bg-[#052049] text-white"
+                          : "bg-white border-2 border-gray-200 text-gray-900"
                         } ${editingMessageId === message.id ? "ring-2 ring-blue-400 !max-w-[95%] w-full" : ""}`}
                     >
                       {message.sender === "versa" && (
@@ -481,13 +481,13 @@ export function VersaChatWidget({
                         onClick={() =>
                           handleSendMessage("How do I request access to an application?")
                         }
-                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-xs text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300 shadow-sm"
+                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-xs text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                       >
                         How do I request access to an application?
                       </button>
                       <button
                         onClick={() => handleSendMessage("Show me research tools")}
-                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-xs text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300 shadow-sm"
+                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-xs text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                       >
                         Show me research tools
                       </button>
