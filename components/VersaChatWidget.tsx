@@ -24,7 +24,7 @@ export function VersaChatWidget({
   onRequestAccess,
 }: VersaChatWidgetProps) {
   const launcherTooltip = (
-    <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] bg-[#f2f3f4] px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
+    <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] border-2 border-[#006BE9] bg-[#f2f3f4] px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
       <p className="m-0 text-[18px] leading-[1.1] font-semibold text-[#052049]">
         AI Assistant
       </p>
