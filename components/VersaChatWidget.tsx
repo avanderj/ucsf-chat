@@ -24,8 +24,8 @@ export function VersaChatWidget({
   onRequestAccess,
 }: VersaChatWidgetProps) {
   const launcherTooltip = (
-    <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] rounded-2xl border border-[#D1D3D3] bg-white px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
-      <p className="m-0 text-[18px] leading-[1.1] font-semibold text-[#303030]">
+    <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] bg-[#f2f3f4] px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
+      <p className="m-0 text-[18px] leading-[1.1] font-semibold text-[#052049]">
         AI Assistant
       </p>
       <p className="m-0 mt-1 text-base leading-[1.2] font-normal text-[#727272]">
@@ -50,6 +50,7 @@ export function VersaChatWidget({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editInputValue, setEditInputValue] = useState("");
+  const [originalEditValue, setOriginalEditValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
@@ -142,21 +143,26 @@ export function VersaChatWidget({
   const startEditing = (id: string, text: string) => {
     setEditingMessageId(id);
     setEditInputValue(text);
+    setOriginalEditValue(text);
   };
 
   const cancelEditing = () => {
     setEditingMessageId(null);
     setEditInputValue("");
+    setOriginalEditValue("");
   };
 
   const saveEdit = (id: string) => {
     if (!editInputValue.trim()) return;
+    const hasChanged = editInputValue.trim() !== originalEditValue.trim();
     setMessages((prev) =>
       prev.map((msg) =>
-        msg.id === id ? { ...msg, text: editInputValue, edited: true } : msg
+        msg.id === id ? { ...msg, text: editInputValue, edited: hasChanged } : msg
       )
     );
-    simulateAIResponse(editInputValue);
+    if (hasChanged) {
+      simulateAIResponse(editInputValue);
+    }
     cancelEditing();
   };
 
@@ -382,7 +388,7 @@ export function VersaChatWidget({
                     </div>
 
                     {/* Meta Row (Below Bubble) */}
-                    <div className={`flex items-center mt-1.5 px-1 gap-3 ${editingMessageId === message.id ? "hidden" : ""}`}>
+                    <div className={`flex items-center mt-1.5 px-1 gap-3 ${editingMessageId === message.id || message.id === "1" ? "hidden" : ""}`}>
                       <p className="text-[10px] text-gray-400">
                         {formatTime(message.timestamp)}
                       </p>
@@ -532,7 +538,7 @@ export function VersaChatWidget({
                 <h3 className="text-[#052049] font-bold text-xl">Help us improve</h3>
                 <button 
                   onClick={() => setShowFeedbackModal(false)}
-                  className="p-2 hover:bg-gray-100 transition-colors rounded-full"
+                  className="p-2 hover:bg-gray-100 transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -552,17 +558,7 @@ export function VersaChatWidget({
               
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowFeedbackModal(false);
-                    setFeedbackText("");
-                  }}
-                  className="!rounded-none"
-                >
-                  Skip
-                </Button>
-                <Button
-                  variant="primarySolid"
+                  variant="primary"
                   onClick={() => {
                     console.log(`Feedback for ${feedbackMessageId}: ${feedbackText}`);
                     setShowFeedbackModal(false);
