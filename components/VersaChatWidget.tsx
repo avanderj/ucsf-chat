@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Send, MessageSquare, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, Edit2, Undo2 } from "lucide-react";
+import { X, Send, MessageSquare, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/Button";
 
@@ -16,7 +16,6 @@ interface Message {
   sender: "user" | "versa";
   timestamp: Date;
   feedback?: "helpful" | "unhelpful";
-  edited?: boolean;
 }
 
 export function VersaChatWidget({
@@ -48,12 +47,8 @@ export function VersaChatWidget({
   const [inputValue, setInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editInputValue, setEditInputValue] = useState("");
-  const [originalEditValue, setOriginalEditValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string | null>(null);
@@ -140,41 +135,6 @@ export function VersaChatWidget({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const startEditing = (id: string, text: string) => {
-    setEditingMessageId(id);
-    setEditInputValue(text);
-    setOriginalEditValue(text);
-  };
-
-  const cancelEditing = () => {
-    setEditingMessageId(null);
-    setEditInputValue("");
-    setOriginalEditValue("");
-  };
-
-  const saveEdit = (id: string) => {
-    if (!editInputValue.trim()) return;
-    const hasChanged = editInputValue.trim() !== originalEditValue.trim();
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === id ? { ...msg, text: editInputValue, edited: hasChanged } : msg
-      )
-    );
-    if (hasChanged) {
-      simulateAIResponse(editInputValue);
-    }
-    cancelEditing();
-  };
-
-  useEffect(() => {
-    if (editingMessageId && editInputRef.current) {
-      editInputRef.current.focus();
-      editInputRef.current.setSelectionRange(
-        editInputRef.current.value.length,
-        editInputRef.current.value.length
-      );
-    }
-  }, [editingMessageId]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -329,14 +289,14 @@ export function VersaChatWidget({
                       className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === "user"
                           ? "bg-[#052049] text-white"
                           : "bg-white border-2 border-gray-200 text-gray-900"
-                        } ${editingMessageId === message.id ? "ring-2 ring-blue-400 !max-w-[95%] w-full" : ""}`}
+                        }`}
                     >
                       {message.sender === "versa" && (
                         <div className="flex items-center gap-2 mb-2">
                           <img
                             src="/assets/versa-logo.png"
                             alt="Digital A11y"
-                            className="w-4 h-4 object-contain"
+                            className="w-5 h-5 object-contain"
                           />
                           <span className="text-xs font-semibold text-[#052049]">
                             Digital A11y
@@ -344,53 +304,12 @@ export function VersaChatWidget({
                         </div>
                       )}
 
-                      {editingMessageId === message.id ? (
-                        <div className="flex flex-col gap-2">
-                           <textarea
-                            ref={editInputRef}
-                            value={editInputValue}
-                            onChange={(e) => setEditInputValue(e.target.value)}
-                            className="w-full bg-white/10 text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-white/50 min-h-[80px] resize-none"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                saveEdit(message.id);
-                              }
-                              if (e.key === "Escape") {
-                                cancelEditing();
-                              }
-                            }}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={cancelEditing}
-                              className="px-3 py-1 rounded-md text-xs font-medium bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1"
-                            >
-                              <Undo2 className="w-3 h-3" />
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => saveEdit(message.id)}
-                              className="px-3 py-1 rounded-md text-xs font-medium bg-white text-[#052049] hover:bg-white/90 transition-colors flex items-center gap-1"
-                            >
-                              <Check className="w-3 h-3" />
-                              Save
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-base leading-relaxed whitespace-pre-wrap">{message.text}</p>
-                          {message.edited && message.sender === "user" && (
-                            <span className="text-[10px] italic opacity-50 block mt-1">Edited</span>
-                          )}
-                        </>
-                      )}
+                      <p className="text-base leading-relaxed whitespace-pre-wrap">{message.text}</p>
                     </div>
 
                     {/* Meta Row (Below Bubble) */}
-                    <div className={`flex items-center mt-1.5 px-1 gap-3 ${editingMessageId === message.id || message.id === "1" ? "hidden" : ""}`}>
-                      <p className="text-[10px] text-gray-400">
+                    <div className={`flex items-center mt-1.5 px-1 gap-3 ${message.id === "1" ? "hidden" : ""}`}>
+                      <p className="text-[14px] text-gray-400">
                         {formatTime(message.timestamp)}
                       </p>
 
@@ -408,16 +327,6 @@ export function VersaChatWidget({
                           )}
                         </button>
 
-                        {/* Edit Button (User only) */}
-                        {message.sender === "user" && (
-                          <button
-                            onClick={() => startEditing(message.id, message.text)}
-                            className="p-1 rounded-md text-gray-400 hover:text-[#006BE9] hover:bg-blue-50 transition-all"
-                            title="Edit message"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
 
                         {/* AI Feedback */}
                         {message.sender === "versa" && message.id !== "1" && (
