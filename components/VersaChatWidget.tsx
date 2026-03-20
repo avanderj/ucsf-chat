@@ -265,7 +265,7 @@ export function VersaChatWidget({
       {/* Chat Widget */}
       {isOpen && (
         <div
-          className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 bg-white border-2 border-gray-200 transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light rounded-xl md:rounded-2xl ${
+          className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 bg-white border-2 border-gray-200 transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light rounded-t-xl md:rounded-t-2xl ${
             isExpanded 
               ? "w-full md:w-[850px] h-full md:h-[85vh]" 
               : "w-full md:w-[490px] h-full md:h-[800px] md:max-h-[85vh]"
