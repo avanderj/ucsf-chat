@@ -411,7 +411,7 @@ export function VersaChatWidget({
                   </div>
                 </div>
 
-                <div className="flex items-end gap-2">
+                <div className="flex items-center gap-2">
                   <input
                     ref={inputRef}
                     type="text"
@@ -419,7 +419,7 @@ export function VersaChatWidget({
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask me anything..."
-                    className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#18A1CD]/30 focus:border-[#18A1CD] text-base transition-all"
+                    className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006BE9]/20 focus:border-[#006BE9] text-base transition-all"
                   />
                   <button
                     onClick={() => handleSendMessage()}
