@@ -578,7 +578,7 @@ export function VersaChatWidget({
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`group fixed bottom-6 right-6 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center z-40 shadow-xl ${
+          className={`group fixed bottom-6 right-6 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center z-40 shadow-xl animate-pulse-twice ${
             showBlueMinimizedTrigger
               ? "w-16 h-16 bg-[#006BE9]"
               : "w-16 h-16 bg-white border-2 border-gray-200"
