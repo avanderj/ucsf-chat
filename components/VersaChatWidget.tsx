@@ -202,7 +202,7 @@ export function VersaChatWidget({
     return (
       <>
         {!isAuthCardDismissed && (
-          <div className="fixed bottom-6 right-6 z-40 w-[min(420px,calc(100vw-2rem))] rounded-none bg-white border border-gray-200 px-7 pt-5 pb-6 shadow-xl">
+          <div className="fixed bottom-6 right-6 z-40 w-[min(420px,calc(100vw-2rem))] rounded-none bg-white border border-gray-200 px-7 pt-5 pb-6 shadow-xl text-[#171717] scheme-light">
             <button
               onClick={() => setIsAuthCardDismissed(true)}
               className="absolute right-4 top-4 rounded-md p-1 text-[#506380] transition-colors hover:text-[#052049]"
@@ -264,7 +264,7 @@ export function VersaChatWidget({
       {/* Chat Widget */}
       {isOpen && (
         <div
-          className={`fixed bottom-0 right-0 md:bottom-16 md:right-6 bg-white border-2 border-gray-200 transition-all duration-300 z-50 flex flex-col shadow-2xl ${
+          className={`fixed bottom-0 right-0 md:bottom-16 md:right-6 bg-white border-2 border-gray-200 transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light ${
             isExpanded 
               ? "w-full md:w-[600px] h-full md:h-[calc(100vh-8rem)]" 
               : "w-full md:w-96 h-full md:h-[600px]"
@@ -531,7 +531,7 @@ export function VersaChatWidget({
 
       {/* Feedback Modal */}
       {showFeedbackModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 text-[#171717] scheme-light">
           <div className="bg-white rounded-none w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-[#D1D3D3] shadow-2xl">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
