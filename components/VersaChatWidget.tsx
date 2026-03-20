@@ -245,10 +245,11 @@ export function VersaChatWidget({
         {isAuthCardDismissed && (
           <button
             onClick={() => setIsAuthCardDismissed(false)}
-            className="group fixed bottom-6 right-6 z-40 h-16 w-16 rounded-full bg-[#006BE9] p-3.5 transition-transform hover:scale-105 shadow-lg"
+            className="group fixed bottom-6 right-6 z-40 rounded-full bg-[#006BE9] p-3.5 transition-transform hover:scale-105 shadow-lg flex items-center justify-center"
+            style={{ width: '88px', height: '88px' }}
             aria-label="Open AI Assistant authentication card"
           >
-            <MessageSquare className="h-full w-full text-white" strokeWidth={2.25} />
+            <MessageSquare className="h-[46px] w-[46px] text-white" strokeWidth={2} />
             {launcherTooltip}
           </button>
         )}
@@ -578,15 +579,16 @@ export function VersaChatWidget({
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
+          style={{ width: '88px', height: '88px' }}
           className={`group fixed bottom-6 right-6 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center z-40 shadow-xl animate-pulse-twice ${
             showBlueMinimizedTrigger
-              ? "w-16 h-16 bg-[#006BE9]"
-              : "w-16 h-16 bg-white border-2 border-gray-200"
+              ? "bg-[#006BE9]"
+              : "bg-white border-2 border-gray-200"
           }`}
           aria-label="Open Versa AI Assistant"
         >
           {showBlueMinimizedTrigger ? (
-            <MessageSquare className="w-8 h-8 text-white" strokeWidth={2.25} />
+            <MessageSquare className="w-[46px] h-[46px] text-white" strokeWidth={2} />
           ) : (
             <img
               src="/assets/versa-logo.png"
