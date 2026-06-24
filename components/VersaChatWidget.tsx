@@ -1,13 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
-import { X, Send, MessageSquare, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check } from "lucide-react";
+import { X, Search, MessageSquare, MessageSquareMore, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/Button";
 
 interface VersaChatWidgetProps {
   hasAccess: boolean;
-  onRequestAccess?: () => void;
+  onAuthenticate?: () => void;
+  suggestedPrompts?: string[];
 }
 
 interface Message {
@@ -18,10 +20,60 @@ interface Message {
   feedback?: "helpful" | "unhelpful";
 }
 
+interface AgentOption {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export function VersaChatWidget({
   hasAccess,
-  onRequestAccess,
+  onAuthenticate,
+  suggestedPrompts,
 }: VersaChatWidgetProps) {
+  const agentOptions: AgentOption[] = [
+    {
+      id: "digital-a11y",
+      name: "Digital A11y",
+      description: "Accessibility and compliance support",
+    },
+    {
+      id: "itom",
+      name: "IT Operating Model (ITOM)",
+      description: "Operating model guidance, service design, and team workflows",
+    },
+    {
+      id: "iam-modernization",
+      name: "IAM Modernization Guide",
+      description: "Identity, access, and modernization program support",
+    },
+    {
+      id: "project-one",
+      name: "Project One Navigator",
+      description: "Program updates, milestones, and implementation help",
+    },
+    {
+      id: "cloud-ops",
+      name: "Cloud Operations Advisor",
+      description: "Platform operations, environments, and support pathways",
+    },
+    {
+      id: "data-governance",
+      name: "Data Governance Helper",
+      description: "Data stewardship, standards, and governance questions",
+    },
+    {
+      id: "service-desk",
+      name: "Service Desk Assistant",
+      description: "Incident routing, support intake, and request guidance",
+    },
+    {
+      id: "digital-workplace",
+      name: "Digital Workplace Coach",
+      description: "Collaboration tools, rollout support, and adoption help",
+    },
+  ];
+
   const launcherTooltip = (
     <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] border-2 border-[#006BE9] bg-[#f2f3f4] px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
       <p className="m-0 text-[18px] leading-[1.1] font-semibold text-[#052049]">
@@ -45,14 +97,33 @@ export function VersaChatWidget({
     },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [hiddenSuggestionsKey, setHiddenSuggestionsKey] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const agentMenuRef = useRef<HTMLDivElement>(null);
+  const nextMessageIdRef = useRef(2);
+  const [activeAgentId, setActiveAgentId] = useState(agentOptions[0].id);
+  const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackMessageId, setFeedbackMessageId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
+  const activeAgent =
+    agentOptions.find((agent) => agent.id === activeAgentId) ?? agentOptions[0];
+  const orderedAgentOptions = [
+    activeAgent,
+    ...agentOptions.filter((agent) => agent.id !== activeAgent.id),
+  ];
+  const defaultSuggestedPrompts = [
+    "How do I make a PDF accessible?",
+    "What accessibility issues are highest risk for websites?",
+    "Where can I find live help and training?",
+    "Show me the main accessibility resources and FAQs.",
+  ];
+  const promptSuggestions = suggestedPrompts ?? defaultSuggestedPrompts;
+  const promptSuggestionsKey = promptSuggestions.join("||");
+  const showSuggestions = hiddenSuggestionsKey !== promptSuggestionsKey;
 
   const handleFeedback = (messageId: string, type: "helpful" | "unhelpful") => {
     setMessages((prev) =>
@@ -89,12 +160,30 @@ export function VersaChatWidget({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        agentMenuRef.current &&
+        !agentMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsAgentMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
   const handleSendMessage = (text?: string) => {
     const messageText = typeof text === "string" ? text : inputValue;
     if (!messageText.trim()) return;
+    const isSuggestedPrompt = promptSuggestions.includes(messageText.trim());
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: (nextMessageIdRef.current++).toString(),
       text: messageText,
       sender: "user",
       timestamp: new Date(),
@@ -102,12 +191,15 @@ export function VersaChatWidget({
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+    if (isSuggestedPrompt) {
+      setHiddenSuggestionsKey(promptSuggestionsKey);
+    }
 
     // Simulate AI response
-    simulateAIResponse(messageText);
+    simulateAIResponse();
   };
 
-  const simulateAIResponse = (query: string) => {
+  const simulateAIResponse = () => {
     // Add a small delay for realism
     setTimeout(() => {
       const responses = [
@@ -119,7 +211,7 @@ export function VersaChatWidget({
       ];
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (nextMessageIdRef.current++).toString(),
         text: responses[Math.floor(Math.random() * responses.length)],
         sender: "versa",
         timestamp: new Date(),
@@ -154,50 +246,55 @@ export function VersaChatWidget({
   const handleNonAuthAuthenticate = () => {
     setIsAuthCardDismissed(true);
     setIsOpen(false);
-    onRequestAccess?.();
+    onAuthenticate?.();
   };
 
-  // No Access View - Documentation Link
+  // No Access View - Login CTA
   if (!hasAccess) {
     return (
       <>
         {!isAuthCardDismissed && (
-          <div className="fixed bottom-6 right-6 z-40 w-[min(420px,calc(100vw-2rem))] rounded-none bg-white border border-gray-200 px-7 pt-5 pb-6 shadow-xl text-[#171717] scheme-light">
-            <button
-              onClick={() => setIsAuthCardDismissed(true)}
-              className="absolute right-4 top-4 rounded-md p-1 text-[#506380] transition-colors hover:text-[#052049]"
-              aria-label="Dismiss AI Assistant card"
-            >
-              <X className="h-5 w-5" />
-            </button>
+          <div className="fixed bottom-5 right-5 z-40 w-[min(448px,calc(100vw-2rem))] overflow-hidden bg-white shadow-[0_20px_45px_rgba(5,32,73,0.12)] text-[#171717] scheme-light">
+            <div className="relative bg-[#006BE9] px-[30px] pb-[24px] pt-[22px] text-white">
+              <button
+                onClick={() => setIsAuthCardDismissed(true)}
+                className="absolute right-[22px] top-[18px] rounded-md p-1 text-white/90 transition-colors hover:text-white"
+                aria-label="Dismiss AI Assistant card"
+              >
+                <X className="h-[28px] w-[28px]" strokeWidth={2} />
+              </button>
 
-            <div className="flex justify-center">
-              <div className="h-14 w-14 rounded-full bg-[#006BE9] p-3">
-                <MessageSquare
-                  className="h-full w-full text-white"
-                  strokeWidth={2.25}
-                />
+              <div className="flex flex-col items-center justify-center gap-3 pt-2 text-center">
+                <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white">
+                  <MessageSquare
+                    className="h-[35px] w-[38px] flex-shrink-0 text-[#006BE9]"
+                    strokeWidth={2.25}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="mt-3 text-center">
-              <h3 className="text-[22px] font-semibold leading-none text-[#052049]">
-                Ask Digital A11y
-              </h3>
-              <p className="mt-4 text-[16px] leading-[1.4] text-[#6B778C]">
-                AI-powered guidance to help navigate MyAccess.
-              </p>
-            </div>
+            <div className="px-[30px] py-[30px] text-center">
+              <div className="text-[#052049]">
+                <h3 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-[#052049]">
+                  Ask Digital A11y
+                </h3>
+              </div>
 
-            <div className="mt-7">
-              <Button
-                variant="primary"
-                onClick={handleNonAuthAuthenticate}
-                className="!h-[52px] !w-full !rounded-none !text-[18px]"
-                aria-label="Request AI Assistant access"
-              >
-                Request Access
-              </Button>
+              <p className="mx-auto mt-[30px] max-w-[388px] text-[16px] font-normal leading-[1.32] tracking-[-0.02em] text-[#667085]">
+                Get answers about PDFs, alt text, and other digital accessibility requirements.
+              </p>
+
+              <div className="mt-[34px]">
+                <Button
+                  variant="primary"
+                  onClick={handleNonAuthAuthenticate}
+                  className="!h-auto !w-full !rounded-full !border-2 !py-[11px] !text-[16px] !font-semibold !leading-none"
+                  aria-label="Log In via MyAccess"
+                >
+                  Log In via MyAccess
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -205,9 +302,9 @@ export function VersaChatWidget({
         {isAuthCardDismissed && (
           <button
             onClick={() => setIsAuthCardDismissed(false)}
-            className="group fixed bottom-6 right-6 z-40 rounded-full bg-[#006BE9] p-3.5 transition-transform hover:scale-105 shadow-lg flex items-center justify-center"
+            className="group fixed bottom-6 right-6 z-40 flex items-center justify-center rounded-full bg-[#006BE9] p-3.5 shadow-lg transition-transform hover:scale-105"
             style={{ width: '88px', height: '88px' }}
-            aria-label="Open AI Assistant authentication card"
+            aria-label="Open Digital A11y Assistant login card"
           >
             <MessageSquare className="h-[46px] w-[46px] text-white" strokeWidth={2} />
             {launcherTooltip}
@@ -225,25 +322,93 @@ export function VersaChatWidget({
       {/* Chat Widget */}
       {isOpen && (
         <div
-          className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 bg-white border-2 border-gray-200 transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light rounded-t-xl md:rounded-t-2xl ${
+          className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 bg-white transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light rounded-t-xl md:rounded-t-2xl ${
             isExpanded 
               ? "w-full md:w-[850px] h-full md:h-[85vh]" 
               : "w-full md:w-[490px] h-full md:h-[800px] md:max-h-[85vh]"
           }`}
         >
           {/* Header */}
-          <div className="bg-[#052049] text-white px-5 py-5 flex items-center justify-between flex-shrink-0 -mt-[2px] -mx-[2px] border-2 border-[#052049]">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-[#006BE9]" strokeWidth={2.25} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <h3 className="font-bold text-[18px] tracking-tight leading-none">
-                  Ask Digital A11y
-                </h3>
-                <p className="text-[16px] text-white/80 leading-none">
-                  Accessibility &amp; Compliance Support
+          <div className="bg-[#052049] text-white px-5 py-5 flex items-center justify-between flex-shrink-0">
+            <div className="relative mr-auto" ref={agentMenuRef}>
+              <button
+                type="button"
+                className={`flex w-full min-w-0 items-center gap-3 rounded-none px-3 py-2 text-left transition-colors focus-visible:outline-none ${
+                  isAgentMenuOpen
+                    ? "bg-white/10"
+                    : "hover:bg-white/10 focus-visible:bg-white/10"
+                }`}
+                aria-haspopup="listbox"
+                aria-expanded={isAgentMenuOpen}
+                onClick={() => setIsAgentMenuOpen((prev) => !prev)}
+              >
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center">
+                  <MessageSquare className="h-8 w-8 text-[#006BE9]" strokeWidth={2.25} />
+                </div>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <h3 className="truncate font-bold text-[18px] tracking-tight leading-[1.15]">
+                    {activeAgent.name}
+                  </h3>
+                  <ChevronDown
+                    className={`mt-0.5 h-4 w-4 flex-shrink-0 text-white/80 transition-transform duration-200 ${
+                      isAgentMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </button>
+
+              <div
+                className={`absolute left-0 top-full z-20 mt-2 w-[360px] rounded-none bg-white px-4 pb-4 pt-2 shadow-[0_20px_45px_rgba(5,32,73,0.2)] transition-all duration-200 ${
+                  isAgentMenuOpen
+                    ? "pointer-events-auto translate-y-0 opacity-100"
+                    : "pointer-events-none translate-y-1 opacity-0"
+                }`}
+              >
+                <p className="mb-2 flex h-10 items-center pb-0 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">
+                  Select another IT agent
                 </p>
+                <div
+                  role="listbox"
+                  aria-label="Available agents"
+                  className="max-h-[286px] space-y-1 overflow-y-auto"
+                >
+                  {orderedAgentOptions.map((agent) => (
+                      <button
+                        key={agent.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveAgentId(agent.id);
+                          setIsAgentMenuOpen(false);
+                        }}
+                        className={`flex w-full flex-col rounded-none px-3 py-2 text-left transition-colors hover:bg-[#F2F3F4] focus-visible:bg-[#F2F3F4] focus-visible:outline-none ${
+                          agent.id === activeAgent.id
+                            ? "bg-[#EAF3FF]"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <MessageSquare
+                              className="h-4 w-4 flex-shrink-0 text-[#006BE9]"
+                              strokeWidth={2.2}
+                            />
+                            <span className="text-[15px] font-semibold leading-tight text-[#052049]">
+                              {agent.name}
+                            </span>
+                          </div>
+                          {agent.id === activeAgent.id ? (
+                            <Check
+                              className="h-4 w-4 flex-shrink-0 self-center text-[#052049]"
+                              strokeWidth={3}
+                            />
+                          ) : null}
+                        </div>
+                        <span className="mt-1 pl-[26px] text-[13px] leading-[1.35] text-[#506380]">
+                          {agent.description}
+                        </span>
+                      </button>
+                    ))}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -263,6 +428,7 @@ export function VersaChatWidget({
                 onClick={() => {
                   setIsOpen(false);
                   setIsExpanded(false);
+                  setIsAgentMenuOpen(false);
                 }}
                 className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
                 aria-label="Close chat"
@@ -293,10 +459,12 @@ export function VersaChatWidget({
                     >
                       {message.sender === "versa" && (
                         <div className="flex items-center gap-2 mb-2">
-                          <img
+                          <Image
                             src="/assets/versa-logo.png"
                             alt="Digital A11y"
                             className="w-5 h-5 object-contain"
+                            width={20}
+                            height={20}
                           />
                           <span className="text-xs font-semibold text-[#052049]">
                             Digital A11y
@@ -363,14 +531,38 @@ export function VersaChatWidget({
               </div>
 
               {/* Input */}
-              <div className="border-t-2 border-gray-100 p-4 bg-white flex-shrink-0">
-                <div className="mb-4 space-y-3">
+              <div className="border-t-2 border-gray-100 bg-[#F2F3F4] p-4 flex-shrink-0">
+                <div className="flex items-stretch">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Ask me anything..."
+                    className="h-16 flex-1 border-0 border-l-4 border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSendMessage()}
+                    disabled={!inputValue.trim()}
+                    className="flex h-16 w-16 items-center justify-center bg-[#3C69D9] text-white rounded-none hover:bg-[#2F58BE] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    aria-label="Send message"
+                  >
+                    <Search className="h-6 w-6" strokeWidth={2.2} />
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">
+                    <span className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">
                       Suggested prompts
                     </span>
                     <button
-                      onClick={() => setShowSuggestions(!showSuggestions)}
+                      onClick={() =>
+                        setHiddenSuggestionsKey((prev) =>
+                          prev === promptSuggestionsKey ? null : promptSuggestionsKey
+                        )
+                      }
                       role="switch"
                       aria-checked={showSuggestions}
                       className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
@@ -386,49 +578,27 @@ export function VersaChatWidget({
                     </button>
                   </div>
 
-                  {/* Collapsible suggested prompts */}
-                  <div 
+                  <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      showSuggestions ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
+                      showSuggestions ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
                     <div className="space-y-2 pb-1">
-                      <button
-                        onClick={() =>
-                          handleSendMessage("How do I request access to an application?")
-                        }
-                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-base text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                      >
-                        How do I request access to an application?
-                      </button>
-                      <button
-                        onClick={() => handleSendMessage("Show me research tools")}
-                        className="w-full text-left px-3 py-2 bg-gray-50 rounded-lg text-base text-gray-600 transition-colors border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                      >
-                        Show me research tools
-                      </button>
+                      {promptSuggestions.map((prompt) => (
+                        <button
+                          key={prompt}
+                          onClick={() => handleSendMessage(prompt)}
+                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-colors hover:bg-[#E7EAED]"
+                        >
+                          <MessageSquareMore
+                            className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#506380]"
+                            strokeWidth={2.1}
+                          />
+                          <span>{prompt}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask me anything..."
-                    className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006BE9]/20 focus:border-[#006BE9] text-base transition-all"
-                  />
-                  <button
-                    onClick={() => handleSendMessage()}
-                    disabled={!inputValue.trim()}
-                    className="p-3 bg-[#006BE9] text-white rounded-xl hover:bg-[#0F388A] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-lg"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-5 h-5" strokeWidth={2.5} />
-                  </button>
                 </div>
 
                 <p className="text-sm text-gray-400 mt-4 text-center leading-tight">
@@ -455,7 +625,7 @@ export function VersaChatWidget({
               </div>
               
               <p className="text-[#506380] mb-6 text-[16px] leading-[1.5]">
-                We're sorry this response wasn't helpful. Please tell us more about what was missing or incorrect.
+                We&apos;re sorry this response wasn&apos;t helpful. Please tell us more about what was missing or incorrect.
               </p>
               
               <textarea
@@ -487,25 +657,35 @@ export function VersaChatWidget({
       {/* Floating Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          style={{ width: '88px', height: '88px' }}
-          className={`group fixed bottom-6 right-6 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center z-40 shadow-xl animate-pulse-twice ${
+          onClick={() => {
+            setIsAgentMenuOpen(false);
+            setIsOpen(true);
+          }}
+          style={showBlueMinimizedTrigger ? undefined : { width: '88px', height: '88px' }}
+          className={`group fixed bottom-6 right-6 transition-all duration-300 flex items-center justify-center z-40 shadow-xl ${
             showBlueMinimizedTrigger
-              ? "bg-[#006BE9]"
-              : "bg-white border-2 border-gray-200"
+              ? "rounded-full bg-[#006BE9] px-5 py-4 gap-3 text-white hover:scale-105"
+              : "rounded-full bg-white border-2 border-gray-200 hover:scale-110 animate-pulse-twice"
           }`}
-          aria-label="Open Digital A11y Assistant"
+          aria-label={`Open ${activeAgent.name} Assistant`}
         >
           {showBlueMinimizedTrigger ? (
-            <MessageSquare className="w-[46px] h-[46px] text-white" strokeWidth={2} />
+            <>
+              <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
+              <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
+                {`Ask ${activeAgent.name}`}
+              </span>
+            </>
           ) : (
-            <img
+            <Image
               src="/assets/versa-logo.png"
               alt="Digital A11y"
               className="w-10 h-10 object-contain"
+              width={40}
+              height={40}
             />
           )}
-          {launcherTooltip}
+          {!showBlueMinimizedTrigger && launcherTooltip}
         </button>
       )}
     </>
