@@ -95,6 +95,7 @@ export default function Home() {
         )}
       </div>
       <VersaChatWidget
+        contextKey={currentPage}
         hasAccess={hasAccess}
         onAuthenticate={() => setHasAccess(true)}
         suggestedPrompts={activePage.prompts}

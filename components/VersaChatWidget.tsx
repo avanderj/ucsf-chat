@@ -1,18 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import React from "react";
-import { X, Search, MessageSquare, MessageSquareMore, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, ChevronDown } from "lucide-react";
+import { X, Send, MessageSquare, MessageSquareMore, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/Button";
 
 interface VersaChatWidgetProps {
+  contextKey?: string;
   hasAccess: boolean;
   onAuthenticate?: () => void;
   suggestedPrompts?: string[];
 }
 
 interface Message {
+  agentId?: string;
+  agentName?: string;
   id: string;
   text: string;
   sender: "user" | "versa";
@@ -26,11 +28,22 @@ interface AgentOption {
   description: string;
 }
 
+interface StoredWidgetState {
+  activeAgentId?: string;
+  messages?: Array<
+    Omit<Message, "timestamp"> & {
+      timestamp: string;
+    }
+  >;
+}
+
 export function VersaChatWidget({
+  contextKey,
   hasAccess,
   onAuthenticate,
   suggestedPrompts,
 }: VersaChatWidgetProps) {
+  const widgetStateStorageKey = "ucsf-chat-widget-state";
   const agentOptions: AgentOption[] = [
     {
       id: "digital-a11y",
@@ -88,14 +101,27 @@ export function VersaChatWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAuthCardDismissed, setIsAuthCardDismissed] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hi! I'm Digital A11y, your AI assistant for MyAccess. I can help you find applications, answer questions about UCSF resources, and guide you through common tasks. How can I assist you today?",
-      sender: "versa",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    try {
+      const rawState = window.sessionStorage.getItem(widgetStateStorageKey);
+      if (!rawState) {
+        return [];
+      }
+
+      const parsedState = JSON.parse(rawState) as StoredWidgetState;
+
+      return (parsedState.messages ?? []).map((message) => ({
+        ...message,
+        timestamp: new Date(message.timestamp),
+      }));
+    } catch {
+      return [];
+    }
+  });
   const [inputValue, setInputValue] = useState("");
   const [hiddenSuggestionsKey, setHiddenSuggestionsKey] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -103,7 +129,27 @@ export function VersaChatWidget({
   const inputRef = useRef<HTMLInputElement>(null);
   const agentMenuRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(2);
-  const [activeAgentId, setActiveAgentId] = useState(agentOptions[0].id);
+  const [activeAgentId, setActiveAgentId] = useState(() => {
+    if (typeof window === "undefined") {
+      return agentOptions[0].id;
+    }
+
+    try {
+      const rawState = window.sessionStorage.getItem(widgetStateStorageKey);
+      if (!rawState) {
+        return agentOptions[0].id;
+      }
+
+      const parsedState = JSON.parse(rawState) as StoredWidgetState;
+      const storedAgentId = parsedState.activeAgentId;
+
+      return agentOptions.some((agent) => agent.id === storedAgentId)
+        ? storedAgentId ?? agentOptions[0].id
+        : agentOptions[0].id;
+    } catch {
+      return agentOptions[0].id;
+    }
+  });
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
 
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -111,19 +157,142 @@ export function VersaChatWidget({
   const [feedbackText, setFeedbackText] = useState("");
   const activeAgent =
     agentOptions.find((agent) => agent.id === activeAgentId) ?? agentOptions[0];
+  const agentExperience: Record<
+    string,
+    {
+      introBody: string;
+      prompts: string[];
+      title: string;
+    }
+  > = {
+    "digital-a11y": {
+      introBody:
+        "Get help with accessibility requirements, document remediation, training resources, and practical guidance for digital content.",
+      prompts:
+        suggestedPrompts ?? [
+          "How do I make a PDF accessible?",
+          "What accessibility issues are highest risk for websites?",
+          "Where can I find live help and training?",
+          "Show me the main accessibility resources and FAQs.",
+        ],
+      title: "Accessibility and compliance support",
+    },
+    itom: {
+      introBody:
+        "Ask about service design, team roles, operating model decisions, workflows, and support handoffs.",
+      prompts: [
+        "How should we define service ownership?",
+        "What workflows should this team standardize?",
+        "How should support and escalation be structured?",
+        "What operating model gaps should we assess first?",
+      ],
+      title: "IT operating model guidance",
+    },
+    "iam-modernization": {
+      introBody:
+        "Get help with identity strategy, access design, modernization planning, and rollout priorities.",
+      prompts: [
+        "What should an IAM modernization roadmap include?",
+        "How should roles and entitlements be structured?",
+        "What identity risks should we prioritize first?",
+        "How should we phase IAM modernization work?",
+      ],
+      title: "Identity and access modernization",
+    },
+    "project-one": {
+      introBody:
+        "Ask for implementation guidance, milestone awareness, team readiness, and workstream coordination support.",
+      prompts: [
+        "What are the key Project One milestones?",
+        "What should teams prepare for next?",
+        "How does this workstream affect implementation?",
+        "What dependencies should we be tracking?",
+      ],
+      title: "Program updates and implementation help",
+    },
+    "cloud-ops": {
+      introBody:
+        "Get support with environments, operational pathways, platform questions, and cloud service coordination.",
+      prompts: [
+        "How do I route a cloud operations request?",
+        "What environment issue should we check first?",
+        "How should operational support handoffs work?",
+        "What cloud operations details should teams document?",
+      ],
+      title: "Cloud operations and platform support",
+    },
+    "data-governance": {
+      introBody:
+        "Ask about stewardship, standards, data ownership, governance decisions, and policy alignment.",
+      prompts: [
+        "What data governance standards apply here?",
+        "Who should own this data decision?",
+        "How do we define stewardship for this dataset?",
+        "What governance questions should we answer first?",
+      ],
+      title: "Data governance and stewardship",
+    },
+    "service-desk": {
+      introBody:
+        "Get help with intake, routing, escalation, incident categorization, and request handling.",
+      prompts: [
+        "How should this request be routed?",
+        "Is this an incident, request, or problem?",
+        "What should go into the intake ticket?",
+        "When should this issue be escalated?",
+      ],
+      title: "Support intake and request routing",
+    },
+    "digital-workplace": {
+      introBody:
+        "Ask about rollout planning, training, adoption support, communications, and collaboration tool enablement.",
+      prompts: [
+        "How do we support adoption for this tool?",
+        "What rollout communications should we prepare?",
+        "How should we train teams on this change?",
+        "What support materials should we create?",
+      ],
+      title: "Digital workplace adoption support",
+    },
+  };
+  const activeExperience =
+    agentExperience[activeAgent.id] ?? agentExperience["digital-a11y"];
   const orderedAgentOptions = [
     activeAgent,
     ...agentOptions.filter((agent) => agent.id !== activeAgent.id),
   ];
-  const defaultSuggestedPrompts = [
-    "How do I make a PDF accessible?",
-    "What accessibility issues are highest risk for websites?",
-    "Where can I find live help and training?",
-    "Show me the main accessibility resources and FAQs.",
-  ];
-  const promptSuggestions = suggestedPrompts ?? defaultSuggestedPrompts;
-  const promptSuggestionsKey = promptSuggestions.join("||");
+  const promptSuggestions = activeExperience.prompts;
+  const promptSuggestionsKey = `${contextKey ?? "default"}::${activeAgent.id}::${promptSuggestions.join("||")}`;
   const showSuggestions = hiddenSuggestionsKey !== promptSuggestionsKey;
+
+  useEffect(() => {
+    const numericMessageIds = messages
+      .map((message) => Number(message.id))
+      .filter((id) => Number.isFinite(id));
+    const highestMessageId =
+      numericMessageIds.length > 0 ? Math.max(...numericMessageIds) : 1;
+
+    nextMessageIdRef.current = highestMessageId + 1;
+  }, [messages]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const serializedState: StoredWidgetState = {
+      activeAgentId,
+      messages: messages.map((message) => ({
+        ...message,
+        timestamp: message.timestamp.toISOString(),
+      })),
+    };
+
+    window.sessionStorage.setItem(
+      widgetStateStorageKey,
+      JSON.stringify(serializedState)
+    );
+  }, [activeAgentId, messages]);
 
   const handleFeedback = (messageId: string, type: "helpful" | "unhelpful") => {
     setMessages((prev) =>
@@ -181,8 +350,11 @@ export function VersaChatWidget({
     const messageText = typeof text === "string" ? text : inputValue;
     if (!messageText.trim()) return;
     const isSuggestedPrompt = promptSuggestions.includes(messageText.trim());
+    const sendingAgent = activeAgent;
 
     const userMessage: Message = {
+      agentId: sendingAgent.id,
+      agentName: sendingAgent.name,
       id: (nextMessageIdRef.current++).toString(),
       text: messageText,
       sender: "user",
@@ -196,10 +368,10 @@ export function VersaChatWidget({
     }
 
     // Simulate AI response
-    simulateAIResponse();
+    simulateAIResponse(sendingAgent);
   };
 
-  const simulateAIResponse = () => {
+  const simulateAIResponse = (agent: AgentOption) => {
     // Add a small delay for realism
     setTimeout(() => {
       const responses = [
@@ -211,6 +383,8 @@ export function VersaChatWidget({
       ];
 
       const aiMessage: Message = {
+        agentId: agent.id,
+        agentName: agent.name,
         id: (nextMessageIdRef.current++).toString(),
         text: responses[Math.floor(Math.random() * responses.length)],
         sender: "versa",
@@ -248,6 +422,103 @@ export function VersaChatWidget({
     setIsOpen(false);
     onAuthenticate?.();
   };
+
+  const renderedMessages =
+    messages.length === 0 ? (
+      <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F2F3F4]">
+          <MessageSquare
+            className="h-9 w-9 text-[#006BE9]"
+            strokeWidth={2.2}
+          />
+        </div>
+        <h3 className="mt-5 text-[30px] font-semibold leading-none text-[#052049]">
+          {activeAgent.name}
+        </h3>
+        <p className="mt-4 text-[20px] font-semibold leading-tight text-[#052049]">
+          {activeExperience.title}
+        </p>
+        <p className="mx-auto mt-3 max-w-[360px] text-[16px] leading-[1.5] text-[#506380]">
+          {activeExperience.introBody}
+        </p>
+      </div>
+    ) : (
+      <>
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex flex-col group/msg ${message.sender === "user"
+                ? "items-end"
+                : "items-start"
+              }`}
+          >
+            <div
+              className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === "user"
+                  ? "bg-[#EAF3FF] text-[#052049]"
+                  : "bg-white border-2 border-gray-200 text-gray-900"
+                }`}
+            >
+              {message.sender === "versa" && (
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[#052049]">
+                    {message.agentName ?? activeAgent.name}
+                  </span>
+                </div>
+              )}
+
+              <p className="whitespace-pre-wrap text-base leading-relaxed">{message.text}</p>
+            </div>
+
+            <div className="mt-1.5 flex items-center gap-3 px-1">
+              <p className="text-[14px] text-gray-400">
+                {formatTime(message.timestamp)}
+              </p>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleCopyMessage(message.id, message.text)}
+                  className="rounded-md p-1 text-gray-400 transition-all hover:bg-blue-50 hover:text-[#006BE9]"
+                  title="Copy message"
+                >
+                  {copiedId === message.id ? (
+                      <Check className="h-3.5 w-3.5 text-green-500" />
+                  ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                  )}
+                </button>
+
+                {message.sender === "versa" && message.id !== "1" && (
+                  <div className="ml-1 flex items-center gap-1 border-l border-gray-200 pl-1">
+                    {(!message.feedback || message.feedback === "helpful") && (
+                      <button
+                        onClick={() => handleFeedback(message.id, "helpful")}
+                        className={`rounded-md p-1 transition-all hover:bg-gray-100 ${
+                          message.feedback === "helpful" ? "bg-blue-50 text-[#006BE9]" : "text-gray-400"
+                        }`}
+                        title={message.feedback === "helpful" ? "Undo helpful selection" : "Helpful"}
+                      >
+                        <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === "helpful" ? "fill-current" : ""}`} />
+                      </button>
+                    )}
+                    {(!message.feedback || message.feedback === "unhelpful") && (
+                      <button
+                        onClick={() => handleFeedback(message.id, "unhelpful")}
+                        className={`rounded-md p-1 transition-all hover:bg-gray-100 ${
+                          message.feedback === "unhelpful" ? "bg-red-50 text-red-500" : "text-gray-400"
+                        }`}
+                        title={message.feedback === "unhelpful" ? "Undo unhelpful selection" : "Not helpful"}
+                      >
+                        <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === "unhelpful" ? "fill-current" : ""}`} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </>
+    );
 
   // No Access View - Login CTA
   if (!hasAccess) {
@@ -442,91 +713,7 @@ export function VersaChatWidget({
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-gradient-to-b from-gray-50/50 to-white">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex flex-col group/msg ${message.sender === "user"
-                        ? "items-end"
-                        : "items-start"
-                      }`}
-                  >
-                    {/* Chat Bubble */}
-                    <div
-                      className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === "user"
-                          ? "bg-[#052049] text-white"
-                          : "bg-white border-2 border-gray-200 text-gray-900"
-                        }`}
-                    >
-                      {message.sender === "versa" && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Image
-                            src="/assets/versa-logo.png"
-                            alt="Digital A11y"
-                            className="w-5 h-5 object-contain"
-                            width={20}
-                            height={20}
-                          />
-                          <span className="text-xs font-semibold text-[#052049]">
-                            Digital A11y
-                          </span>
-                        </div>
-                      )}
-
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">{message.text}</p>
-                    </div>
-
-                    {/* Meta Row (Below Bubble) */}
-                    <div className={`flex items-center mt-1.5 px-1 gap-3 ${message.id === "1" ? "hidden" : ""}`}>
-                      <p className="text-[14px] text-gray-400">
-                        {formatTime(message.timestamp)}
-                      </p>
-
-                      <div className="flex items-center gap-1">
-                        {/* Copy Button */}
-                        <button
-                          onClick={() => handleCopyMessage(message.id, message.text)}
-                          className="p-1 rounded-md text-gray-400 hover:text-[#006BE9] hover:bg-blue-50 transition-all"
-                          title="Copy message"
-                        >
-                          {copiedId === message.id ? (
-                              <Check className="w-3.5 h-3.5 text-green-500" />
-                          ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-
-
-                        {/* AI Feedback */}
-                        {message.sender === "versa" && message.id !== "1" && (
-                          <div className="flex items-center gap-1 ml-1 border-l border-gray-200 pl-1">
-                            {(!message.feedback || message.feedback === "helpful") && (
-                              <button
-                                onClick={() => handleFeedback(message.id, "helpful")}
-                                className={`p-1 rounded-md transition-all hover:bg-gray-100 ${
-                                  message.feedback === "helpful" ? "text-[#006BE9] bg-blue-50" : "text-gray-400"
-                                }`}
-                                title={message.feedback === "helpful" ? "Undo helpful selection" : "Helpful"}
-                              >
-                                <ThumbsUp className={`w-3.5 h-3.5 ${message.feedback === "helpful" ? "fill-current" : ""}`} />
-                              </button>
-                            )}
-                            {(!message.feedback || message.feedback === "unhelpful") && (
-                              <button
-                                onClick={() => handleFeedback(message.id, "unhelpful")}
-                                className={`p-1 rounded-md transition-all hover:bg-gray-100 ${
-                                  message.feedback === "unhelpful" ? "text-red-500 bg-red-50" : "text-gray-400"
-                                }`}
-                                title={message.feedback === "unhelpful" ? "Undo unhelpful selection" : "Not helpful"}
-                              >
-                                <ThumbsDown className={`w-3.5 h-3.5 ${message.feedback === "unhelpful" ? "fill-current" : ""}`} />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {renderedMessages}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -539,7 +726,7 @@ export function VersaChatWidget({
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Ask me anything..."
+                    placeholder="Ask a question..."
                     className="h-16 flex-1 border-0 border-l-4 border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
                   />
                   <button
@@ -548,7 +735,7 @@ export function VersaChatWidget({
                     className="flex h-16 w-16 items-center justify-center bg-[#3C69D9] text-white rounded-none hover:bg-[#2F58BE] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     aria-label="Send message"
                   >
-                    <Search className="h-6 w-6" strokeWidth={2.2} />
+                    <Send className="h-6 w-6" strokeWidth={2.2} />
                   </button>
                 </div>
 
@@ -667,23 +854,17 @@ export function VersaChatWidget({
               ? "rounded-full bg-[#006BE9] px-5 py-4 gap-3 text-white hover:scale-105"
               : "rounded-full bg-white border-2 border-gray-200 hover:scale-110 animate-pulse-twice"
           }`}
-          aria-label={`Open ${activeAgent.name} Assistant`}
+          aria-label="Open AI Assistant"
         >
           {showBlueMinimizedTrigger ? (
             <>
               <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
               <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
-                {`Ask ${activeAgent.name}`}
+                Ask a question
               </span>
             </>
           ) : (
-            <Image
-              src="/assets/versa-logo.png"
-              alt="Digital A11y"
-              className="w-10 h-10 object-contain"
-              width={40}
-              height={40}
-            />
+            <MessageSquare className="h-8 w-8 text-[#006BE9]" strokeWidth={2.1} />
           )}
           {!showBlueMinimizedTrigger && launcherTooltip}
         </button>
