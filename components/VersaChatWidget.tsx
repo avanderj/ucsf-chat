@@ -1,9 +1,19 @@
 "use client";
 
 import React from "react";
-import { X, Send, MessageSquare, MessageSquareMore, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, ChevronDown } from "lucide-react";
+import { X, Send, MessageSquare, MessageSquareMore, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Copy, Check, ChevronDown, BrainCircuit } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/Button";
+import {
+  agentOptions,
+  defaultAgentId,
+  getAgentExperience,
+  guestBodyCopyByContext,
+  scopedAgentOptions,
+  umbrellaAgent,
+  widgetStateStorageKey,
+  type AgentOption,
+} from "@/lib/versa-chat-config";
 
 interface VersaChatWidgetProps {
   contextKey?: string;
@@ -22,14 +32,16 @@ interface Message {
   feedback?: "helpful" | "unhelpful";
 }
 
-interface AgentOption {
-  id: string;
-  name: string;
-  description: string;
-}
-
 interface StoredWidgetState {
   activeAgentId?: string;
+  conversations?: Record<
+    string,
+    Array<
+      Omit<Message, "timestamp"> & {
+        timestamp: string;
+      }
+    >
+  >;
   messages?: Array<
     Omit<Message, "timestamp"> & {
       timestamp: string;
@@ -37,55 +49,46 @@ interface StoredWidgetState {
   >;
 }
 
+const EMPTY_MESSAGES: Message[] = [];
+
+const getConversationStorageKey = (agentId: string) => agentId;
+
+const normalizeStoredConversations = (
+  conversations?: StoredWidgetState["conversations"]
+): Record<string, Message[]> => {
+  if (!conversations) {
+    return {};
+  }
+
+  const mergedConversations = new Map<string, Message[]>();
+
+  Object.entries(conversations).forEach(([storedKey, storedMessages]) => {
+    const keyParts = storedKey.split("::");
+    const normalizedAgentId = keyParts[keyParts.length - 1] || storedKey;
+    const nextMessages = storedMessages.map((message) => ({
+      ...message,
+      timestamp: new Date(message.timestamp),
+    }));
+    const existingMessages = mergedConversations.get(normalizedAgentId) ?? [];
+
+    mergedConversations.set(
+      normalizedAgentId,
+      [...existingMessages, ...nextMessages].sort(
+        (left, right) => left.timestamp.getTime() - right.timestamp.getTime()
+      )
+    );
+  });
+
+  return Object.fromEntries(mergedConversations);
+};
+
 export function VersaChatWidget({
   contextKey,
   hasAccess,
   onAuthenticate,
   suggestedPrompts,
 }: VersaChatWidgetProps) {
-  const widgetStateStorageKey = "ucsf-chat-widget-state";
-  const agentOptions: AgentOption[] = [
-    {
-      id: "digital-a11y",
-      name: "Digital A11y",
-      description: "Accessibility and compliance support",
-    },
-    {
-      id: "itom",
-      name: "IT Operating Model (ITOM)",
-      description: "Operating model guidance, service design, and team workflows",
-    },
-    {
-      id: "iam-modernization",
-      name: "IAM Modernization Guide",
-      description: "Identity, access, and modernization program support",
-    },
-    {
-      id: "project-one",
-      name: "Project One Navigator",
-      description: "Program updates, milestones, and implementation help",
-    },
-    {
-      id: "cloud-ops",
-      name: "Cloud Operations Advisor",
-      description: "Platform operations, environments, and support pathways",
-    },
-    {
-      id: "data-governance",
-      name: "Data Governance Helper",
-      description: "Data stewardship, standards, and governance questions",
-    },
-    {
-      id: "service-desk",
-      name: "Service Desk Assistant",
-      description: "Incident routing, support intake, and request guidance",
-    },
-    {
-      id: "digital-workplace",
-      name: "Digital Workplace Coach",
-      description: "Collaboration tools, rollout support, and adoption help",
-    },
-  ];
+  const normalizedContextKey = contextKey ?? "default";
 
   const launcherTooltip = (
     <div className="absolute bottom-full right-0 mb-3 w-max max-w-[90vw] border-2 border-[#006BE9] bg-[#f2f3f4] px-5 py-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-left">
@@ -98,28 +101,42 @@ export function VersaChatWidget({
     </div>
   );
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(hasAccess);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAuthCardDismissed, setIsAuthCardDismissed] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window === "undefined") {
-      return [];
+  const [conversationHistory, setConversationHistory] = useState<
+    Record<string, Message[]>
+  >(() => {
+    if (typeof window === "undefined" || !hasAccess) {
+      return {};
     }
 
     try {
       const rawState = window.sessionStorage.getItem(widgetStateStorageKey);
       if (!rawState) {
-        return [];
+        return {};
       }
 
       const parsedState = JSON.parse(rawState) as StoredWidgetState;
+      const conversations = parsedState.conversations;
 
-      return (parsedState.messages ?? []).map((message) => ({
-        ...message,
-        timestamp: new Date(message.timestamp),
-      }));
+      if (conversations) {
+        return normalizeStoredConversations(conversations);
+      }
+
+      if (parsedState.messages?.length) {
+        return {
+          [getConversationStorageKey(parsedState.activeAgentId ?? defaultAgentId)]:
+            parsedState.messages.map((message) => ({
+              ...message,
+              timestamp: new Date(message.timestamp),
+            })),
+        };
+      }
+
+      return {};
     } catch {
-      return [];
+      return {};
     }
   });
   const [inputValue, setInputValue] = useState("");
@@ -129,25 +146,26 @@ export function VersaChatWidget({
   const inputRef = useRef<HTMLInputElement>(null);
   const agentMenuRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(2);
+  const responseTimeoutsRef = useRef<number[]>([]);
   const [activeAgentId, setActiveAgentId] = useState(() => {
-    if (typeof window === "undefined") {
-      return agentOptions[0].id;
+    if (typeof window === "undefined" || !hasAccess) {
+      return defaultAgentId;
     }
 
     try {
       const rawState = window.sessionStorage.getItem(widgetStateStorageKey);
       if (!rawState) {
-        return agentOptions[0].id;
+        return defaultAgentId;
       }
 
       const parsedState = JSON.parse(rawState) as StoredWidgetState;
       const storedAgentId = parsedState.activeAgentId;
 
       return agentOptions.some((agent) => agent.id === storedAgentId)
-        ? storedAgentId ?? agentOptions[0].id
-        : agentOptions[0].id;
+        ? storedAgentId ?? defaultAgentId
+        : defaultAgentId;
     } catch {
-      return agentOptions[0].id;
+      return defaultAgentId;
     }
   });
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
@@ -157,145 +175,135 @@ export function VersaChatWidget({
   const [feedbackText, setFeedbackText] = useState("");
   const activeAgent =
     agentOptions.find((agent) => agent.id === activeAgentId) ?? agentOptions[0];
-  const agentExperience: Record<
-    string,
-    {
-      introBody: string;
-      prompts: string[];
-      title: string;
-    }
-  > = {
-    "digital-a11y": {
-      introBody:
-        "Get help with accessibility requirements, document remediation, training resources, and practical guidance for digital content.",
-      prompts:
-        suggestedPrompts ?? [
-          "How do I make a PDF accessible?",
-          "What accessibility issues are highest risk for websites?",
-          "Where can I find live help and training?",
-          "Show me the main accessibility resources and FAQs.",
-        ],
-      title: "Accessibility and compliance support",
-    },
-    itom: {
-      introBody:
-        "Ask about service design, team roles, operating model decisions, workflows, and support handoffs.",
-      prompts: [
-        "How should we define service ownership?",
-        "What workflows should this team standardize?",
-        "How should support and escalation be structured?",
-        "What operating model gaps should we assess first?",
-      ],
-      title: "IT operating model guidance",
-    },
-    "iam-modernization": {
-      introBody:
-        "Get help with identity strategy, access design, modernization planning, and rollout priorities.",
-      prompts: [
-        "What should an IAM modernization roadmap include?",
-        "How should roles and entitlements be structured?",
-        "What identity risks should we prioritize first?",
-        "How should we phase IAM modernization work?",
-      ],
-      title: "Identity and access modernization",
-    },
-    "project-one": {
-      introBody:
-        "Ask for implementation guidance, milestone awareness, team readiness, and workstream coordination support.",
-      prompts: [
-        "What are the key Project One milestones?",
-        "What should teams prepare for next?",
-        "How does this workstream affect implementation?",
-        "What dependencies should we be tracking?",
-      ],
-      title: "Program updates and implementation help",
-    },
-    "cloud-ops": {
-      introBody:
-        "Get support with environments, operational pathways, platform questions, and cloud service coordination.",
-      prompts: [
-        "How do I route a cloud operations request?",
-        "What environment issue should we check first?",
-        "How should operational support handoffs work?",
-        "What cloud operations details should teams document?",
-      ],
-      title: "Cloud operations and platform support",
-    },
-    "data-governance": {
-      introBody:
-        "Ask about stewardship, standards, data ownership, governance decisions, and policy alignment.",
-      prompts: [
-        "What data governance standards apply here?",
-        "Who should own this data decision?",
-        "How do we define stewardship for this dataset?",
-        "What governance questions should we answer first?",
-      ],
-      title: "Data governance and stewardship",
-    },
-    "service-desk": {
-      introBody:
-        "Get help with intake, routing, escalation, incident categorization, and request handling.",
-      prompts: [
-        "How should this request be routed?",
-        "Is this an incident, request, or problem?",
-        "What should go into the intake ticket?",
-        "When should this issue be escalated?",
-      ],
-      title: "Support intake and request routing",
-    },
-    "digital-workplace": {
-      introBody:
-        "Ask about rollout planning, training, adoption support, communications, and collaboration tool enablement.",
-      prompts: [
-        "How do we support adoption for this tool?",
-        "What rollout communications should we prepare?",
-        "How should we train teams on this change?",
-        "What support materials should we create?",
-      ],
-      title: "Digital workplace adoption support",
-    },
+  const activeConversationKey = getConversationStorageKey(activeAgentId);
+  const messages = conversationHistory[activeConversationKey] ?? EMPTY_MESSAGES;
+  const renderAgentBadge = (
+    agent: AgentOption,
+    size: "menu" | "header" | "empty" = "menu"
+  ) => {
+    const isUmbrellaAgent = agent.id === umbrellaAgent.id;
+    const badgeBaseClassName =
+      "inline-flex aspect-square flex-none shrink-0 items-center justify-center overflow-hidden rounded-full";
+    const containerClassName =
+      size === "empty"
+        ? isUmbrellaAgent
+          ? `${badgeBaseClassName} h-16 w-16 bg-white`
+          : `${badgeBaseClassName} h-16 w-16 bg-[#006BE9]`
+        : size === "header"
+          ? isUmbrellaAgent
+            ? `${badgeBaseClassName} h-10 w-10 bg-white`
+            : `${badgeBaseClassName} h-10 w-10 bg-[#006BE9]`
+          : isUmbrellaAgent
+            ? `${badgeBaseClassName} h-10 w-10 bg-white`
+            : `${badgeBaseClassName} h-10 w-10 bg-[#006BE9]`;
+    const iconClassName =
+      size === "empty"
+        ? isUmbrellaAgent
+          ? "h-8 w-8 text-[#006BE9]"
+          : "h-8 w-8 text-white"
+        : size === "header"
+          ? isUmbrellaAgent
+            ? "h-5 w-5 text-[#006BE9]"
+            : "h-5 w-5 text-white"
+          : isUmbrellaAgent
+            ? "h-5 w-5 text-[#006BE9]"
+            : "h-5 w-5 text-white";
+
+    return (
+      <div className={containerClassName}>
+        {isUmbrellaAgent ? (
+          <BrainCircuit className={iconClassName} strokeWidth={2.1} />
+        ) : (
+          <MessageSquare className={iconClassName} strokeWidth={2.1} />
+        )}
+      </div>
+    );
   };
-  const activeExperience =
-    agentExperience[activeAgent.id] ?? agentExperience["digital-a11y"];
-  const orderedAgentOptions = [
-    activeAgent,
-    ...agentOptions.filter((agent) => agent.id !== activeAgent.id),
+  const activeExperience = getAgentExperience(activeAgent.id, suggestedPrompts);
+  const orderedScopedAgentOptions = [
+    ...scopedAgentOptions.filter((agent) => agent.id === activeAgent.id),
+    ...scopedAgentOptions.filter((agent) => agent.id !== activeAgent.id),
   ];
   const promptSuggestions = activeExperience.prompts;
-  const promptSuggestionsKey = `${contextKey ?? "default"}::${activeAgent.id}::${promptSuggestions.join("||")}`;
+  const promptSuggestionsKey = `${normalizedContextKey}::${activeAgent.id}::${promptSuggestions.join("||")}`;
   const showSuggestions = hiddenSuggestionsKey !== promptSuggestionsKey;
+  const guestContextKey =
+    contextKey && contextKey in guestBodyCopyByContext
+      ? (contextKey as keyof typeof guestBodyCopyByContext)
+      : null;
+  const guestBodyCopy =
+    (guestContextKey ? guestBodyCopyByContext[guestContextKey] : undefined) ??
+    activeExperience.introBody;
+
+  const clearPendingResponses = () => {
+    responseTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    responseTimeoutsRef.current = [];
+  };
+
+  const updateConversationMessages = (
+    conversationKey: string,
+    updater: (messages: Message[]) => Message[]
+  ) => {
+    setConversationHistory((prev) => ({
+      ...prev,
+      [conversationKey]: updater(prev[conversationKey] ?? []),
+    }));
+  };
 
   useEffect(() => {
-    const numericMessageIds = messages
+    const numericMessageIds = Object.values(conversationHistory)
+      .flat()
       .map((message) => Number(message.id))
       .filter((id) => Number.isFinite(id));
     const highestMessageId =
       numericMessageIds.length > 0 ? Math.max(...numericMessageIds) : 1;
 
     nextMessageIdRef.current = highestMessageId + 1;
-  }, [messages]);
+  }, [conversationHistory]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
+    if (!hasAccess) {
+      window.sessionStorage.removeItem(widgetStateStorageKey);
+      return;
+    }
+
     const serializedState: StoredWidgetState = {
       activeAgentId,
-      messages: messages.map((message) => ({
-        ...message,
-        timestamp: message.timestamp.toISOString(),
-      })),
+      conversations: Object.fromEntries(
+        Object.entries(conversationHistory).map(([key, conversationMessages]) => [
+          key,
+          conversationMessages.map((message) => ({
+            ...message,
+            timestamp: message.timestamp.toISOString(),
+          })),
+        ])
+      ),
     };
 
     window.sessionStorage.setItem(
       widgetStateStorageKey,
       JSON.stringify(serializedState)
     );
-  }, [activeAgentId, messages]);
+  }, [activeAgentId, conversationHistory, hasAccess]);
+
+  useEffect(() => {
+    return () => {
+      clearPendingResponses();
+    };
+  }, []);
+
+  const handleAgentSelect = (agentId: string) => {
+    setHiddenSuggestionsKey(null);
+    setActiveAgentId(agentId);
+    setIsAgentMenuOpen(false);
+  };
 
   const handleFeedback = (messageId: string, type: "helpful" | "unhelpful") => {
-    setMessages((prev) =>
+    updateConversationMessages(activeConversationKey, (prev) =>
       prev.map((msg) => {
         if (msg.id === messageId) {
           const isSameFeedback = msg.feedback === type;
@@ -351,6 +359,7 @@ export function VersaChatWidget({
     if (!messageText.trim()) return;
     const isSuggestedPrompt = promptSuggestions.includes(messageText.trim());
     const sendingAgent = activeAgent;
+    const sendingConversationKey = getConversationStorageKey(sendingAgent.id);
 
     const userMessage: Message = {
       agentId: sendingAgent.id,
@@ -361,19 +370,25 @@ export function VersaChatWidget({
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    updateConversationMessages(sendingConversationKey, (prev) => [
+      ...prev,
+      userMessage,
+    ]);
     setInputValue("");
     if (isSuggestedPrompt) {
       setHiddenSuggestionsKey(promptSuggestionsKey);
     }
 
     // Simulate AI response
-    simulateAIResponse(sendingAgent);
+    simulateAIResponse(sendingAgent, sendingConversationKey);
   };
 
-  const simulateAIResponse = (agent: AgentOption) => {
+  const simulateAIResponse = (agent: AgentOption, conversationKey: string) => {
     // Add a small delay for realism
-    setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
+      responseTimeoutsRef.current = responseTimeoutsRef.current.filter(
+        (pendingTimeoutId) => pendingTimeoutId !== timeoutId
+      );
       const responses = [
         "I can help you with that. Let me search our application directory for you.",
         "Based on your request, I recommend checking out the following applications in the App Library.",
@@ -391,8 +406,9 @@ export function VersaChatWidget({
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      updateConversationMessages(conversationKey, (prev) => [...prev, aiMessage]);
     }, 800);
+    responseTimeoutsRef.current.push(timeoutId);
   };
 
   const handleCopyMessage = (id: string, text: string) => {
@@ -426,12 +442,7 @@ export function VersaChatWidget({
   const renderedMessages =
     messages.length === 0 ? (
       <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F2F3F4]">
-          <MessageSquare
-            className="h-9 w-9 text-[#006BE9]"
-            strokeWidth={2.2}
-          />
-        </div>
+        {renderAgentBadge(activeAgent, "empty")}
         <h3 className="mt-5 text-[30px] font-semibold leading-none text-[#052049]">
           {activeAgent.name}
         </h3>
@@ -548,12 +559,12 @@ export function VersaChatWidget({
             <div className="px-[30px] py-[30px] text-center">
               <div className="text-[#052049]">
                 <h3 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-[#052049]">
-                  Ask Digital A11y
+                  Get AI-Powered Guidance
                 </h3>
               </div>
 
               <p className="mx-auto mt-[30px] max-w-[388px] text-[16px] font-normal leading-[1.32] tracking-[-0.02em] text-[#667085]">
-                Get answers about PDFs, alt text, and other digital accessibility requirements.
+                {guestBodyCopy}
               </p>
 
               <div className="mt-[34px]">
@@ -573,12 +584,13 @@ export function VersaChatWidget({
         {isAuthCardDismissed && (
           <button
             onClick={() => setIsAuthCardDismissed(false)}
-            className="group fixed bottom-6 right-6 z-40 flex items-center justify-center rounded-full bg-[#006BE9] p-3.5 shadow-lg transition-transform hover:scale-105"
-            style={{ width: '88px', height: '88px' }}
-            aria-label="Open Digital A11y Assistant login card"
+            className="group fixed bottom-6 right-6 z-40 flex items-center justify-center gap-3 rounded-full bg-[#006BE9] px-5 py-4 text-white shadow-lg transition-transform hover:scale-105"
+            aria-label="Open AI Assistant login card"
           >
-            <MessageSquare className="h-[46px] w-[46px] text-white" strokeWidth={2} />
-            {launcherTooltip}
+            <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
+            <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
+              Ask a Question
+            </span>
           </button>
         )}
       </>
@@ -613,9 +625,7 @@ export function VersaChatWidget({
                 aria-expanded={isAgentMenuOpen}
                 onClick={() => setIsAgentMenuOpen((prev) => !prev)}
               >
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center">
-                  <MessageSquare className="h-8 w-8 text-[#006BE9]" strokeWidth={2.25} />
-                </div>
+                <div className="flex-shrink-0">{renderAgentBadge(activeAgent, "header")}</div>
                 <div className="flex min-w-0 items-center gap-1.5">
                   <h3 className="truncate font-bold text-[18px] tracking-tight leading-[1.15]">
                     {activeAgent.name}
@@ -629,27 +639,60 @@ export function VersaChatWidget({
               </button>
 
               <div
-                className={`absolute left-0 top-full z-20 mt-2 w-[360px] rounded-none bg-white px-4 pb-4 pt-2 shadow-[0_20px_45px_rgba(5,32,73,0.2)] transition-all duration-200 ${
+                className={`absolute left-0 top-full z-20 mt-2 w-[360px] rounded-none bg-white px-4 pb-4 pt-4 shadow-[0_20px_45px_rgba(5,32,73,0.2)] transition-all duration-200 ${
                   isAgentMenuOpen
                     ? "pointer-events-auto translate-y-0 opacity-100"
                     : "pointer-events-none translate-y-1 opacity-0"
                 }`}
               >
-                <p className="mb-2 flex h-10 items-center pb-0 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">
-                  Select another IT agent
-                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAgentSelect(umbrellaAgent.id);
+                  }}
+                  className={`flex w-full flex-col px-3 py-2 text-left transition-colors hover:bg-[#F2F3F4] focus-visible:bg-[#F2F3F4] focus-visible:outline-none ${
+                    umbrellaAgent.id === activeAgent.id
+                      ? "bg-[#EAF3FF]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      {renderAgentBadge(umbrellaAgent)}
+                      <div className="min-w-0">
+                        <span className="block text-[15px] font-semibold leading-tight text-[#052049]">
+                          {umbrellaAgent.name}
+                        </span>
+                        <span className="mt-0.5 block text-[13px] leading-[1.35] text-[#506380]">
+                          {umbrellaAgent.description}
+                        </span>
+                      </div>
+                    </div>
+                    {umbrellaAgent.id === activeAgent.id ? (
+                      <Check
+                        className="h-4 w-4 flex-shrink-0 self-center text-[#052049]"
+                        strokeWidth={3}
+                      />
+                    ) : null}
+                  </div>
+                </button>
+
+                <div className="mt-4 border-t border-[#D9E2EC] pt-4">
+                  <p className="mb-2 flex h-10 items-center pb-0 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">
+                    Switch to Another Agent
+                  </p>
+                </div>
                 <div
                   role="listbox"
-                  aria-label="Available agents"
+                  aria-label="Scoped agents"
                   className="max-h-[286px] space-y-1 overflow-y-auto"
                 >
-                  {orderedAgentOptions.map((agent) => (
+                  {orderedScopedAgentOptions.map((agent) => (
                       <button
                         key={agent.id}
                         type="button"
                         onClick={() => {
-                          setActiveAgentId(agent.id);
-                          setIsAgentMenuOpen(false);
+                          handleAgentSelect(agent.id);
                         }}
                         className={`flex w-full flex-col rounded-none px-3 py-2 text-left transition-colors hover:bg-[#F2F3F4] focus-visible:bg-[#F2F3F4] focus-visible:outline-none ${
                           agent.id === activeAgent.id
@@ -657,15 +700,17 @@ export function VersaChatWidget({
                             : ""
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-2.5">
-                            <MessageSquare
-                              className="h-4 w-4 flex-shrink-0 text-[#006BE9]"
-                              strokeWidth={2.2}
-                            />
-                            <span className="text-[15px] font-semibold leading-tight text-[#052049]">
-                              {agent.name}
-                            </span>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-2.5">
+                            {renderAgentBadge(agent)}
+                            <div className="min-w-0">
+                              <span className="block text-[15px] font-semibold leading-tight text-[#052049]">
+                                {agent.name}
+                              </span>
+                              <span className="mt-0.5 block text-[13px] leading-[1.35] text-[#506380]">
+                                {agent.description}
+                              </span>
+                            </div>
                           </div>
                           {agent.id === activeAgent.id ? (
                             <Check
@@ -674,9 +719,6 @@ export function VersaChatWidget({
                             />
                           ) : null}
                         </div>
-                        <span className="mt-1 pl-[26px] text-[13px] leading-[1.35] text-[#506380]">
-                          {agent.description}
-                        </span>
                       </button>
                     ))}
                 </div>
@@ -685,7 +727,7 @@ export function VersaChatWidget({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="hidden md:block p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                className="hidden md:block p-1.5 rounded-none transition-colors hover:bg-white/10"
                 aria-label={isExpanded ? "Minimize chat" : "Expand chat"}
                 title={isExpanded ? "Shrink" : "Expand to fill side"}
               >
@@ -701,7 +743,7 @@ export function VersaChatWidget({
                   setIsExpanded(false);
                   setIsAgentMenuOpen(false);
                 }}
-                className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                className="p-1.5 rounded-none transition-colors hover:bg-white/10"
                 aria-label="Close chat"
               >
                 <X className="w-5 h-5" />
@@ -860,7 +902,7 @@ export function VersaChatWidget({
             <>
               <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
               <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
-                Ask a question
+                Ask a Question
               </span>
             </>
           ) : (

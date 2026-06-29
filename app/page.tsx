@@ -3,49 +3,12 @@
 import Image from "next/image";
 import { useState } from "react";
 import { VersaChatWidget } from "@/components/VersaChatWidget";
-
-type PageKey = "landing" | "office-accessibility";
-
-const pageContent: Record<
-  PageKey,
-  {
-    alt: string;
-    height: number;
-    prompts: string[];
-    src: string;
-    width: number;
-  }
-> = {
-  landing: {
-    alt: "DCAP landing page",
-    height: 4583,
-    prompts: [
-      "How do I make a PDF accessible?",
-      "What accessibility issues are highest risk for websites?",
-      "Where can I find live help and training?",
-      "Show me the main accessibility resources and FAQs.",
-    ],
-    src: "/DCAP-landing.png",
-    width: 5118,
-  },
-  "office-accessibility": {
-    alt: "Word, PowerPoint, and Excel accessibility page",
-    height: 9498,
-    prompts: [
-      "How do I create an accessible Word document?",
-      "What are the PowerPoint-specific accessibility tips?",
-      "What should I check for Excel accessibility?",
-      "Where can I find accessibility checkers and templates?",
-    ],
-    src: "/word-powerpoint-excel-accessibility.png",
-    width: 5120,
-  },
-};
+import { demoPageContent, type PageKey } from "@/lib/versa-chat-config";
 
 export default function Home() {
   const [hasAccess, setHasAccess] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageKey>("landing");
-  const activePage = pageContent[currentPage];
+  const activePage = demoPageContent[currentPage];
 
   const handleOpenOfficeAccessibilityPage = () => {
     setCurrentPage("office-accessibility");
