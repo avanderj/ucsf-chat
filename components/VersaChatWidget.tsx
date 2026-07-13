@@ -7,8 +7,8 @@ import { Button } from "./ui/Button";
 import {
   agentOptions,
   defaultAgentId,
+  guestBodyCopy,
   getAgentExperience,
-  guestBodyCopyByContext,
   scopedAgentOptions,
   umbrellaAgent,
   widgetStateStorageKey,
@@ -227,14 +227,6 @@ export function VersaChatWidget({
   const promptSuggestions = activeExperience.prompts;
   const promptSuggestionsKey = `${normalizedContextKey}::${activeAgent.id}::${promptSuggestions.join("||")}`;
   const showSuggestions = hiddenSuggestionsKey !== promptSuggestionsKey;
-  const guestContextKey =
-    contextKey && contextKey in guestBodyCopyByContext
-      ? (contextKey as keyof typeof guestBodyCopyByContext)
-      : null;
-  const guestBodyCopy =
-    (guestContextKey ? guestBodyCopyByContext[guestContextKey] : undefined) ??
-    activeExperience.introBody;
-
   const clearPendingResponses = () => {
     responseTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
     responseTimeoutsRef.current = [];
@@ -332,6 +324,24 @@ export function VersaChatWidget({
   }, [messages, isOpen]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      scrollToBottom();
+    });
+    const timeoutId = window.setTimeout(() => {
+      scrollToBottom();
+    }, 220);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [isOpen, showSuggestions]);
+
+  useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
@@ -357,7 +367,6 @@ export function VersaChatWidget({
   const handleSendMessage = (text?: string) => {
     const messageText = typeof text === "string" ? text : inputValue;
     if (!messageText.trim()) return;
-    const isSuggestedPrompt = promptSuggestions.includes(messageText.trim());
     const sendingAgent = activeAgent;
     const sendingConversationKey = getConversationStorageKey(sendingAgent.id);
 
@@ -375,9 +384,7 @@ export function VersaChatWidget({
       userMessage,
     ]);
     setInputValue("");
-    if (isSuggestedPrompt) {
-      setHiddenSuggestionsKey(promptSuggestionsKey);
-    }
+    setHiddenSuggestionsKey(promptSuggestionsKey);
 
     // Simulate AI response
     simulateAIResponse(sendingAgent, sendingConversationKey);
@@ -417,6 +424,9 @@ export function VersaChatWidget({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleInputChange = (nextValue: string) => {
+    setInputValue(nextValue);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -434,8 +444,10 @@ export function VersaChatWidget({
   };
 
   const handleNonAuthAuthenticate = () => {
-    setIsAuthCardDismissed(true);
-    setIsOpen(false);
+    setIsAuthCardDismissed(false);
+    setIsOpen(true);
+    setIsExpanded(false);
+    setIsAgentMenuOpen(false);
     onAuthenticate?.();
   };
 
@@ -455,79 +467,93 @@ export function VersaChatWidget({
       </div>
     ) : (
       <>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex flex-col group/msg ${message.sender === "user"
-                ? "items-end"
-                : "items-start"
-              }`}
-          >
+        {messages.map((message) => {
+          const messageAgent =
+            agentOptions.find((agent) => agent.id === message.agentId) ?? activeAgent;
+
+          return (
             <div
-              className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === "user"
-                  ? "bg-[#EAF3FF] text-[#052049]"
-                  : "bg-white border-2 border-gray-200 text-gray-900"
-                }`}
+              key={message.id}
+              className={`flex flex-col group/msg ${message.sender === "user"
+                ? "items-end"
+                : "items-stretch"
+              }`}
             >
               {message.sender === "versa" && (
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-xs font-semibold text-[#052049]">
-                    {message.agentName ?? activeAgent.name}
+                <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-[14px] font-semibold text-[#052049]">
+                    {message.agentName ?? messageAgent.name}
                   </span>
+                  {messageAgent.id === "digital-a11y" && (
+                    <span className="text-[14px] font-medium text-[#506380]">
+                      Accessibility and Compliance Support
+                    </span>
+                  )}
                 </div>
               )}
 
-              <p className="whitespace-pre-wrap text-base leading-relaxed">{message.text}</p>
-            </div>
+              <div
+                className={`relative rounded-2xl py-3 ${message.sender === "user"
+                  ? "max-w-[85%] bg-[#EAF3FF] px-4 text-[#052049]"
+                  : "w-full bg-[#F2F3F4] px-4 text-[#101828]"
+                }`}
+              >
+                <p className="whitespace-pre-wrap text-base leading-relaxed">{message.text}</p>
+                <div className="mt-3 flex items-center gap-2 pt-1">
+                  <p className="text-[14px] font-medium text-[#506380]">
+                    {formatTime(message.timestamp)}
+                  </p>
 
-            <div className="mt-1.5 flex items-center gap-3 px-1">
-              <p className="text-[14px] text-gray-400">
-                {formatTime(message.timestamp)}
-              </p>
+                  <div className="flex items-center gap-1">
+                    {message.sender === "versa" && message.id !== "1" && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleFeedback(message.id, "helpful")}
+                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                            message.feedback === "helpful"
+                              ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]"
+                              : "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
+                          }`}
+                          title={message.feedback === "helpful" ? "Undo Good response" : "Good response"}
+                          aria-label={message.feedback === "helpful" ? "Undo Good response" : "Good response"}
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(message.id, "unhelpful")}
+                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                            message.feedback === "unhelpful"
+                              ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]"
+                              : "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
+                          }`}
+                          title={message.feedback === "unhelpful" ? "Undo Bad response" : "Bad response"}
+                          aria-label={message.feedback === "unhelpful" ? "Undo Bad response" : "Bad response"}
+                        >
+                          <ThumbsDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleCopyMessage(message.id, message.text)}
-                  className="rounded-md p-1 text-gray-400 transition-all hover:bg-blue-50 hover:text-[#006BE9]"
-                  title="Copy message"
-                >
-                  {copiedId === message.id ? (
-                      <Check className="h-3.5 w-3.5 text-green-500" />
-                  ) : (
+                    <button
+                      onClick={() => handleCopyMessage(message.id, message.text)}
+                      className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                        copiedId === message.id
+                          ? "border-transparent text-[#052049]"
+                        : message.sender === "user"
+                            ? "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
+                            : "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
+                      } ${message.sender === "user" ? "active:bg-[#DCE7F2]" : "active:bg-[#E7EAED]"}`}
+                      title="Copy"
+                      aria-label="Copy"
+                    >
                       <Copy className="h-3.5 w-3.5" />
-                  )}
-                </button>
-
-                {message.sender === "versa" && message.id !== "1" && (
-                  <div className="ml-1 flex items-center gap-1 border-l border-gray-200 pl-1">
-                    {(!message.feedback || message.feedback === "helpful") && (
-                      <button
-                        onClick={() => handleFeedback(message.id, "helpful")}
-                        className={`rounded-md p-1 transition-all hover:bg-gray-100 ${
-                          message.feedback === "helpful" ? "bg-blue-50 text-[#006BE9]" : "text-gray-400"
-                        }`}
-                        title={message.feedback === "helpful" ? "Undo helpful selection" : "Helpful"}
-                      >
-                        <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === "helpful" ? "fill-current" : ""}`} />
-                      </button>
-                    )}
-                    {(!message.feedback || message.feedback === "unhelpful") && (
-                      <button
-                        onClick={() => handleFeedback(message.id, "unhelpful")}
-                        className={`rounded-md p-1 transition-all hover:bg-gray-100 ${
-                          message.feedback === "unhelpful" ? "bg-red-50 text-red-500" : "text-gray-400"
-                        }`}
-                        title={message.feedback === "unhelpful" ? "Undo unhelpful selection" : "Not helpful"}
-                      >
-                        <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === "unhelpful" ? "fill-current" : ""}`} />
-                      </button>
-                    )}
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </>
     );
 
@@ -559,7 +585,7 @@ export function VersaChatWidget({
             <div className="px-[30px] py-[30px] text-center">
               <div className="text-[#052049]">
                 <h3 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-[#052049]">
-                  Get AI-Powered Guidance
+                  Get Help With This Topic
                 </h3>
               </div>
 
@@ -754,19 +780,19 @@ export function VersaChatWidget({
           {/* Chat Content */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-gradient-to-b from-gray-50/50 to-white">
+              <div className="flex-1 overflow-y-auto bg-white p-4 space-y-4">
                 {renderedMessages}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <div className="border-t-2 border-gray-100 bg-[#F2F3F4] p-4 flex-shrink-0">
+              <div className="flex-shrink-0 border-t-2 border-gray-100 bg-[#F2F3F4] p-4">
                 <div className="flex items-stretch">
                   <input
                     ref={inputRef}
                     type="text"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={(e) => handleInputChange(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask a question..."
                     className="h-16 flex-1 border-0 border-l-4 border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
@@ -794,10 +820,11 @@ export function VersaChatWidget({
                       }
                       role="switch"
                       aria-checked={showSuggestions}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showSuggestions ? "bg-[#006BE9]" : "bg-gray-200"
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F2F3F4] ${
+                        showSuggestions ? "bg-[#006BE9]" : "bg-[#667085]"
                       }`}
-                      aria-label="Toggle suggested prompts"
+                      aria-label={showSuggestions ? "Hide suggested prompts" : "Show suggested prompts"}
+                      title={showSuggestions ? "Hide suggested prompts" : "Show suggested prompts"}
                     >
                       <span
                         className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${
@@ -817,7 +844,7 @@ export function VersaChatWidget({
                         <button
                           key={prompt}
                           onClick={() => handleSendMessage(prompt)}
-                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-colors hover:bg-[#E7EAED]"
+                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)]"
                         >
                           <MessageSquareMore
                             className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#506380]"
@@ -830,7 +857,7 @@ export function VersaChatWidget({
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-400 mt-4 text-center leading-tight">
+                <p className="mt-4 text-center text-sm leading-tight text-[#475467]">
                   AI responses may vary. Always verify critical information.
                 </p>
               </div>

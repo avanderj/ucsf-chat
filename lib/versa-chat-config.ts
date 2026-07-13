@@ -217,12 +217,8 @@ export function getAgentExperience(
   };
 }
 
-export const guestBodyCopyByContext: Record<PageKey, string> = {
-  landing:
-    "Get answers about PDFs, alt text, and other digital accessibility requirements.",
-  "office-accessibility":
-    "Get help with accessible Word documents, PowerPoint presentations, Excel workbooks, and built-in accessibility tools.",
-};
+export const guestBodyCopy =
+  "Ask a question and get clear answers, practical guidance, and relevant resources in one place.";
 
 export const assistantVisualTokens = {
   badgeBehavior: {
@@ -281,23 +277,23 @@ export const assistantBusinessRules = [
   {
     title: "Page-specific guest copy",
     description:
-      "The logged-out card body copy changes with the current page context, while the authenticated shell and interaction model stay consistent.",
+      "In the logged-out card, the headline can reflect the current page context, but the supporting body copy stays exactly the same on every page.",
   },
   {
     title: "Prompt visibility control",
     description:
-      "Suggested prompts can be toggled within the current view, and they reopen when the user switches back to an agent or page context.",
+      "Suggested prompts can be toggled within the current view, they collapse only after the user submits a question, and they reopen when the user switches back to an agent or page context.",
   },
 ];
 
 export const assistantSpecificityRules = {
   pageSpecific: [
     "Default suggested prompts for Digital A11y can change by page.",
-    "Logged-out body copy can change by page.",
+    "Logged-out headline copy can change by page.",
     "Page imagery and click-through hotspots are page-specific demo content.",
   ],
   sharedAcrossPages: [
-    "Authentication flow and login card behavior.",
+    "Authentication flow and login card behavior, including opening the chat immediately after login.",
     "Dropdown structure, including IT Chat as umbrella plus scoped agent list.",
     "Badge/icon treatment for IT Chat versus scoped agents.",
     "Feedback, copy, expand/minimize, and prompt-toggle interaction patterns.",

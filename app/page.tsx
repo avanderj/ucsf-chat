@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { VersaChatWidget } from "@/components/VersaChatWidget";
 import { demoPageContent, type PageKey } from "@/lib/versa-chat-config";
@@ -22,8 +23,14 @@ export default function Home() {
 
   return (
     <div className="relative w-full">
-      <div className="bg-[#052049] text-white w-full py-2 flex items-center justify-center gap-2 text-sm tracking-wide shadow-md flex-wrap px-4">
+      <div className="flex w-full flex-wrap items-center justify-center gap-2 bg-[#052049] px-4 py-2 text-sm tracking-wide text-white shadow-md">
         <span className="font-semibold uppercase">UCSF chatbot demo</span>
+        <Link
+          href="/annotated-tour"
+          className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/18"
+        >
+          View Annotated Tour
+        </Link>
         <span className="hidden sm:inline opacity-40">|</span>
         <span className="font-light text-white/80">For demonstration purposes only. Content is illustrative and does not represent live data.</span>
       </div>

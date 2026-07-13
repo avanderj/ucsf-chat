@@ -98,8 +98,8 @@ const screenshotSections = [
     callouts: [
       {
         body:
-          "The copy in this card should reflect the current page, not a generic site-wide message. That keeps the entry point grounded in the page the user is already reading.",
-        label: "Page-specific copy",
+          "Keep the language centered on the value users get right away: clear answers, practical guidance, and relevant resources in one place.",
+        label: "Focus on the what/why",
         number: "1",
         targetX: 58,
         targetY: 75,
@@ -107,11 +107,11 @@ const screenshotSections = [
     ],
     eyebrow: "Screenshot 01",
     src: "/annotated-tour/landing-guest-card.png",
-    title: "Logging in uses the live page context",
+    title: "Logging in",
   },
   {
     body:
-      "Once authenticated, the default agent is set to a specific agent that fits the context of the page. Digital A11y is the use case here. The screenshot below shows the empty-state with the agent name and description, input area, and suggested prompts.",
+      "Once authenticated, the chat opens immediately and the default agent is set to a specific agent that fits the context of the page. Digital A11y is the use case here. The screenshot below shows the empty-state with the agent name and description, input area, and suggested prompts.",
     callouts: [
       {
         body:
@@ -131,7 +131,7 @@ const screenshotSections = [
       },
       {
         body:
-          "Suggested prompts change with the current page context so the agent can offer starting points that fit what the user is looking at.",
+          "Suggested prompts change with the current page context so the agent can offer starting points that fit what the user is looking at. They stay visible while the user is typing and collapse only after the user submits a question.",
         label: "Page-specific prompts",
         number: "3",
         targetX: 68,
@@ -141,6 +141,23 @@ const screenshotSections = [
     eyebrow: "Screenshot 02",
     src: "/annotated-tour/landing-authenticated-chat-focused.png",
     title: "After authenticating",
+  },
+  {
+    body:
+      "This view keeps scope, feedback, and state cues together so people can understand the response and react without losing their place.",
+    callouts: [
+      {
+        body:
+          "Showing Accessibility and Compliance Support beside the agent name makes the scope of help visible before the user even reads the answer.",
+        label: "Scope stays visible",
+        number: "1",
+        targetX: 56,
+        targetY: 39,
+      },
+    ],
+    eyebrow: "Screenshot 03",
+    src: "/annotated-tour/response-feedback-live.png",
+    title: "Response actions in context",
   },
   {
     body:
@@ -179,7 +196,7 @@ const screenshotSections = [
         targetY: 71,
       },
     ],
-    eyebrow: "Screenshot 03",
+    eyebrow: "Screenshot 04",
     src: "/annotated-tour/agent-menu-open.png",
     title: "Agent switching happens inside the open chat",
   },
