@@ -642,10 +642,10 @@ export function VersaChatWidget({
             <div className="relative mr-auto" ref={agentMenuRef}>
               <button
                 type="button"
-                className={`flex w-full min-w-0 items-center gap-3 rounded-none px-3 py-2 text-left transition-colors focus-visible:outline-none ${
+                className={`flex w-full min-w-0 items-center gap-3 rounded-none px-3 py-2 text-left transition-[color,background-color,border-color,text-decoration-color,fill,stroke] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 focus-visible:bg-transparent ${
                   isAgentMenuOpen
                     ? "bg-white/10"
-                    : "hover:bg-white/10 focus-visible:bg-white/10"
+                    : "hover:bg-white/10"
                 }`}
                 aria-haspopup="listbox"
                 aria-expanded={isAgentMenuOpen}
@@ -676,7 +676,7 @@ export function VersaChatWidget({
                   onClick={() => {
                     handleAgentSelect(umbrellaAgent.id);
                   }}
-                  className={`flex w-full flex-col px-3 py-2 text-left transition-colors hover:bg-[#F2F3F4] focus-visible:bg-[#F2F3F4] focus-visible:outline-none ${
+                  className={`flex w-full flex-col px-3 py-2 text-left transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[#F2F3F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 ${
                     umbrellaAgent.id === activeAgent.id
                       ? "bg-[#EAF3FF]"
                       : ""
@@ -711,7 +711,7 @@ export function VersaChatWidget({
                 <div
                   role="listbox"
                   aria-label="Scoped agents"
-                  className="max-h-[286px] space-y-1 overflow-y-auto"
+                  className="-mx-1 -my-1 max-h-[286px] space-y-1 overflow-y-auto px-1 py-1"
                 >
                   {orderedScopedAgentOptions.map((agent) => (
                       <button
@@ -720,7 +720,7 @@ export function VersaChatWidget({
                         onClick={() => {
                           handleAgentSelect(agent.id);
                         }}
-                        className={`flex w-full flex-col rounded-none px-3 py-2 text-left transition-colors hover:bg-[#F2F3F4] focus-visible:bg-[#F2F3F4] focus-visible:outline-none ${
+                        className={`flex w-full flex-col rounded-none px-3 py-2 text-left transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[#F2F3F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 ${
                           agent.id === activeAgent.id
                             ? "bg-[#EAF3FF]"
                             : ""
@@ -753,7 +753,7 @@ export function VersaChatWidget({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="hidden md:block p-1.5 rounded-none transition-colors hover:bg-white/10"
+                className="hidden md:block p-1.5 rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
                 aria-label={isExpanded ? "Minimize chat" : "Expand chat"}
                 title={isExpanded ? "Shrink" : "Expand to fill side"}
               >
@@ -769,7 +769,7 @@ export function VersaChatWidget({
                   setIsExpanded(false);
                   setIsAgentMenuOpen(false);
                 }}
-                className="p-1.5 rounded-none transition-colors hover:bg-white/10"
+                className="p-1.5 rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
                 aria-label="Close chat"
               >
                 <X className="w-5 h-5" />
@@ -795,12 +795,12 @@ export function VersaChatWidget({
                     onChange={(e) => handleInputChange(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask a question..."
-                    className="h-16 flex-1 border-0 border-l-4 border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
+                    className="h-16 flex-1 border-0 border-l-[6px] border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
                   />
                   <button
                     onClick={() => handleSendMessage()}
                     disabled={!inputValue.trim()}
-                    className="flex h-16 w-16 items-center justify-center bg-[#3C69D9] text-white rounded-none hover:bg-[#2F58BE] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    className="flex h-16 w-16 items-center justify-center bg-[#3C69D9] text-white rounded-none hover:bg-[#2F58BE] transition-[color,background-color,border-color,text-decoration-color,fill,stroke] focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-[#006BE9] focus-visible:outline-offset-[3px] focus-visible:ring-[3px] focus-visible:ring-white disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     aria-label="Send message"
                   >
                     <Send className="h-6 w-6" strokeWidth={2.2} />
@@ -820,7 +820,7 @@ export function VersaChatWidget({
                       }
                       role="switch"
                       aria-checked={showSuggestions}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F2F3F4] ${
+                      className={`versa-widget-suggestions-toggle relative inline-flex h-4 w-7 items-center rounded-full focus-visible:outline-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] ${
                         showSuggestions ? "bg-[#006BE9]" : "bg-[#667085]"
                       }`}
                       aria-label={showSuggestions ? "Hide suggested prompts" : "Show suggested prompts"}
@@ -835,7 +835,7 @@ export function VersaChatWidget({
                   </div>
 
                   <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    className={`overflow-hidden transition-all duration-300 ease-in-out focus-within:overflow-visible ${
                       showSuggestions ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
@@ -844,7 +844,7 @@ export function VersaChatWidget({
                         <button
                           key={prompt}
                           onClick={() => handleSendMessage(prompt)}
-                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)]"
+                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[rgba(80,99,128,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
                         >
                           <MessageSquareMore
                             className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#506380]"

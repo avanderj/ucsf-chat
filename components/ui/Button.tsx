@@ -26,7 +26,7 @@ const buttonVariants = cva(
                     "font-normal text-[#052049] hover:text-[#006BE9] active:text-[#052049] p-0 h-auto",
 
                 link:
-                    "font-normal text-[#006BE9] hover:text-[#006BE9] hover:no-underline active:text-[#052049] underline underline-offset-4 !p-0 h-auto leading-tight focus-visible:bg-transparent focus-visible:text-[#006BE9] focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-0",
+                    "font-normal text-[#006BE9] hover:text-[#006BE9] hover:no-underline active:text-[#052049] underline underline-offset-4 !p-0 h-auto leading-tight transition-[color,background-color,border-color,text-decoration-color,fill,stroke] focus-visible:bg-transparent focus-visible:text-[#006BE9] focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1",
 
                 neutralCircle:
                     "font-medium border border-[#D1D3D3] bg-white text-gray-700 rounded-full transition-colors hover:bg-gray-50 aria-pressed:bg-[#E2F4FC]/60 aria-pressed:border-[#178CCB] aria-pressed:text-[#052049] aria-pressed:hover:bg-[#CFEAFB]",

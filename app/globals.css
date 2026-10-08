@@ -25,6 +25,30 @@ body {
   font-family: var(--font-sans);
 }
 
+a:focus-visible {
+  outline: 2px solid #006be9;
+  outline-offset: 1px;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+input[placeholder="Ask a question..."]:focus-visible {
+  outline: 2px solid #006be9;
+  outline-offset: 1px;
+}
+
+.versa-widget-suggestions-toggle:focus-visible {
+  outline: none;
+}
+
+.versa-widget-suggestions-toggle:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 2px solid #006be9;
+  border-radius: 0;
+  pointer-events: none;
+}
+
 @keyframes gentle-pulse {
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 107, 233, 0.5); }
   50% { transform: scale(1.2); box-shadow: 0 0 0 20px rgba(0, 107, 233, 0); }
