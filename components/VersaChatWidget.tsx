@@ -342,12 +342,6 @@ export function VersaChatWidget({
   }, [isOpen, showSuggestions]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
       if (
         agentMenuRef.current &&
