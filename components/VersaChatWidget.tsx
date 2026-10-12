@@ -187,27 +187,27 @@ export function VersaChatWidget({
     const containerClassName =
       size === "empty"
         ? isUmbrellaAgent
-          ? `${badgeBaseClassName} h-16 w-16 bg-white`
-          : `${badgeBaseClassName} h-16 w-16 bg-[#006BE9]`
+          ? `${badgeBaseClassName} h-[clamp(3.25rem,6vw,4rem)] w-[clamp(3.25rem,6vw,4rem)] bg-white`
+          : `${badgeBaseClassName} h-[clamp(3.25rem,6vw,4rem)] w-[clamp(3.25rem,6vw,4rem)] bg-[#006BE9]`
         : size === "header"
           ? isUmbrellaAgent
-            ? `${badgeBaseClassName} h-10 w-10 bg-white`
-            : `${badgeBaseClassName} h-10 w-10 bg-[#006BE9]`
+            ? `${badgeBaseClassName} h-[clamp(2.5rem,4vw,2.75rem)] w-[clamp(2.5rem,4vw,2.75rem)] bg-white`
+            : `${badgeBaseClassName} h-[clamp(2.5rem,4vw,2.75rem)] w-[clamp(2.5rem,4vw,2.75rem)] bg-[#006BE9]`
           : isUmbrellaAgent
-            ? `${badgeBaseClassName} h-10 w-10 bg-white`
-            : `${badgeBaseClassName} h-10 w-10 bg-[#006BE9]`;
+            ? `${badgeBaseClassName} h-[clamp(2.5rem,4vw,2.75rem)] w-[clamp(2.5rem,4vw,2.75rem)] bg-white`
+            : `${badgeBaseClassName} h-[clamp(2.5rem,4vw,2.75rem)] w-[clamp(2.5rem,4vw,2.75rem)] bg-[#006BE9]`;
     const iconClassName =
       size === "empty"
         ? isUmbrellaAgent
-          ? "h-8 w-8 text-[#006BE9]"
-          : "h-8 w-8 text-white"
+          ? "h-[clamp(1.6rem,3vw,2rem)] w-[clamp(1.6rem,3vw,2rem)] text-[#006BE9]"
+          : "h-[clamp(1.6rem,3vw,2rem)] w-[clamp(1.6rem,3vw,2rem)] text-white"
         : size === "header"
           ? isUmbrellaAgent
-            ? "h-5 w-5 text-[#006BE9]"
-            : "h-5 w-5 text-white"
+            ? "h-[clamp(1.1rem,1.8vw,1.35rem)] w-[clamp(1.1rem,1.8vw,1.35rem)] text-[#006BE9]"
+            : "h-[clamp(1.1rem,1.8vw,1.35rem)] w-[clamp(1.1rem,1.8vw,1.35rem)] text-white"
           : isUmbrellaAgent
-            ? "h-5 w-5 text-[#006BE9]"
-            : "h-5 w-5 text-white";
+            ? "h-[clamp(1.1rem,1.8vw,1.35rem)] w-[clamp(1.1rem,1.8vw,1.35rem)] text-[#006BE9]"
+            : "h-[clamp(1.1rem,1.8vw,1.35rem)] w-[clamp(1.1rem,1.8vw,1.35rem)] text-white";
 
     return (
       <div className={containerClassName}>
@@ -449,13 +449,13 @@ export function VersaChatWidget({
     messages.length === 0 ? (
       <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
         {renderAgentBadge(activeAgent, "empty")}
-        <h3 className="mt-5 text-[30px] font-semibold leading-none text-[#052049]">
+        <h3 className="mt-5 text-[clamp(1.75rem,2vw+1rem,2rem)] font-semibold leading-none text-[#052049]">
           {activeAgent.name}
         </h3>
-        <p className="mt-4 text-[20px] font-semibold leading-tight text-[#052049]">
+        <p className="mt-4 text-[clamp(1.125rem,1vw+0.9rem,1.25rem)] font-semibold leading-tight text-[#052049]">
           {activeExperience.title}
         </p>
-        <p className="mx-auto mt-3 max-w-[360px] text-[16px] leading-[1.5] text-[#506380]">
+        <p className="mx-auto mt-3 max-w-[360px] text-[clamp(0.95rem,0.85rem+0.2vw,1rem)] leading-[1.5] text-[#506380]">
           {activeExperience.introBody}
         </p>
       </div>
@@ -556,38 +556,38 @@ export function VersaChatWidget({
     return (
       <>
         {!isAuthCardDismissed && (
-          <div className="fixed bottom-5 right-5 z-40 w-[min(448px,calc(100vw-2rem))] overflow-hidden bg-white shadow-[0_20px_45px_rgba(5,32,73,0.12)] text-[#171717] scheme-light">
-            <div className="relative bg-[#006BE9] px-[30px] pb-[24px] pt-[22px] text-white">
+          <div className="versa-widget-auth-card fixed z-40 overflow-hidden bg-white text-[#171717] shadow-[0_20px_45px_rgba(5,32,73,0.12)] scheme-light">
+            <div className="versa-widget-auth-header relative bg-[#006BE9] text-white">
               <button
                 onClick={() => setIsAuthCardDismissed(true)}
-                className="absolute right-[22px] top-[18px] rounded-md p-1 text-white/90 transition-colors hover:text-white"
+                className="versa-widget-auth-close versa-widget-icon-button absolute rounded-none text-white/90 transition-colors hover:text-white"
                 aria-label="Dismiss AI Assistant card"
               >
-                <X className="h-[28px] w-[28px]" strokeWidth={2} />
+                <X className="versa-widget-icon-xl" strokeWidth={2} />
               </button>
 
               <div className="flex flex-col items-center justify-center gap-3 pt-2 text-center">
-                <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white">
+                <div className="versa-widget-auth-badge flex items-center justify-center rounded-full bg-white">
                   <MessageSquare
-                    className="h-[35px] w-[38px] flex-shrink-0 text-[#006BE9]"
+                    className="versa-widget-auth-badge-icon flex-shrink-0 text-[#006BE9]"
                     strokeWidth={2.25}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="px-[30px] py-[30px] text-center">
+            <div className="versa-widget-auth-body text-center">
               <div className="text-[#052049]">
-                <h3 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-[#052049]">
+                <h3 className="versa-widget-auth-title font-semibold leading-[1.05] tracking-[-0.03em] text-[#052049]">
                   Get Help With This Topic
                 </h3>
               </div>
 
-              <p className="mx-auto mt-[30px] max-w-[388px] text-[16px] font-normal leading-[1.32] tracking-[-0.02em] text-[#667085]">
+              <p className="versa-widget-auth-copy mx-auto font-normal leading-[1.32] tracking-[-0.02em] text-[#667085]">
                 {guestBodyCopy}
               </p>
 
-              <div className="mt-[34px]">
+              <div className="versa-widget-auth-cta">
                 <Button
                   variant="primary"
                   onClick={handleNonAuthAuthenticate}
@@ -604,11 +604,11 @@ export function VersaChatWidget({
         {isAuthCardDismissed && (
           <button
             onClick={() => setIsAuthCardDismissed(false)}
-            className="group fixed bottom-6 right-6 z-40 flex items-center justify-center gap-3 rounded-full bg-[#006BE9] px-5 py-4 text-white shadow-lg transition-transform hover:scale-105"
+            className="versa-widget-launcher group fixed z-40 flex items-center justify-center rounded-full bg-[#006BE9] text-white shadow-lg transition-transform hover:scale-105"
             aria-label="Open AI Assistant login card"
           >
-            <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
-            <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
+            <MessageSquare className="versa-widget-icon-xl flex-shrink-0 text-white" strokeWidth={2.1} />
+            <span className="versa-widget-launcher-label whitespace-nowrap font-semibold leading-none text-white">
               Ask a Question
             </span>
           </button>
@@ -625,18 +625,22 @@ export function VersaChatWidget({
       {/* Chat Widget */}
       {isOpen && (
         <div
-          className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 bg-white transition-all duration-300 z-50 flex flex-col shadow-2xl text-[#171717] scheme-light rounded-t-xl md:rounded-t-2xl ${
+          className={`versa-widget-chat fixed z-50 flex flex-col bg-white text-[#171717] shadow-2xl transition-all duration-300 scheme-light ${
             isExpanded 
-              ? "w-full md:w-[850px] h-full md:h-[85vh]" 
-              : "w-full md:w-[490px] h-full md:h-[800px] md:max-h-[85vh]"
+              ? "versa-widget-chat-expanded"
+              : "versa-widget-chat-default"
           }`}
         >
           {/* Header */}
-          <div className="bg-[#052049] text-white px-5 py-5 flex items-center justify-between flex-shrink-0">
+          <div className="versa-widget-header flex flex-shrink-0 items-center justify-between bg-[#052049] text-white">
             <div className="relative mr-auto" ref={agentMenuRef}>
               <button
                 type="button"
-                className={`flex w-full min-w-0 items-center gap-3 rounded-none px-3 py-2 text-left transition-[color,background-color,border-color,text-decoration-color,fill,stroke] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 focus-visible:bg-transparent ${
+                className={`flex w-full min-w-0 items-center gap-3 rounded-none px-3 py-2 text-left transition-[color,background-color,border-color,text-decoration-color,fill,stroke] ${
+                  activeAgent.id === "digital-a11y" && messages.length === 0
+                    ? "focus-visible:outline-none"
+                    : "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
+                } focus-visible:bg-transparent ${
                   isAgentMenuOpen
                     ? "bg-white/10"
                     : "hover:bg-white/10"
@@ -647,11 +651,11 @@ export function VersaChatWidget({
               >
                 <div className="flex-shrink-0">{renderAgentBadge(activeAgent, "header")}</div>
                 <div className="flex min-w-0 items-center gap-1.5">
-                  <h3 className="truncate font-bold text-[18px] tracking-tight leading-[1.15]">
+                  <h3 className="versa-widget-header-title truncate font-bold tracking-tight leading-[1.15]">
                     {activeAgent.name}
                   </h3>
                   <ChevronDown
-                    className={`mt-0.5 h-4 w-4 flex-shrink-0 text-white/80 transition-transform duration-200 ${
+                    className={`versa-widget-icon-sm mt-0.5 flex-shrink-0 text-white/80 transition-transform duration-200 ${
                       isAgentMenuOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -659,7 +663,7 @@ export function VersaChatWidget({
               </button>
 
               <div
-                className={`absolute left-0 top-full z-20 mt-2 w-[360px] rounded-none bg-white px-4 pb-4 pt-4 shadow-[0_20px_45px_rgba(5,32,73,0.2)] transition-all duration-200 ${
+                className={`versa-widget-dropdown absolute left-0 top-full z-20 mt-2 rounded-none bg-white px-4 pb-4 pt-4 shadow-[0_20px_45px_rgba(5,32,73,0.2)] transition-all duration-200 ${
                   isAgentMenuOpen
                     ? "pointer-events-auto translate-y-0 opacity-100"
                     : "pointer-events-none translate-y-1 opacity-0"
@@ -690,7 +694,7 @@ export function VersaChatWidget({
                     </div>
                     {umbrellaAgent.id === activeAgent.id ? (
                       <Check
-                        className="h-4 w-4 flex-shrink-0 self-center text-[#052049]"
+                        className="versa-widget-icon-sm flex-shrink-0 self-center text-[#052049]"
                         strokeWidth={3}
                       />
                     ) : null}
@@ -734,7 +738,7 @@ export function VersaChatWidget({
                           </div>
                           {agent.id === activeAgent.id ? (
                             <Check
-                              className="h-4 w-4 flex-shrink-0 self-center text-[#052049]"
+                              className="versa-widget-icon-sm flex-shrink-0 self-center text-[#052049]"
                               strokeWidth={3}
                             />
                           ) : null}
@@ -747,14 +751,14 @@ export function VersaChatWidget({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="hidden md:block p-1.5 rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
+                className="versa-widget-icon-button hidden rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 md:block"
                 aria-label={isExpanded ? "Minimize chat" : "Expand chat"}
                 title={isExpanded ? "Shrink" : "Expand to fill side"}
               >
                 {isExpanded ? (
-                  <Minimize2 className="w-5 h-5" />
+                  <Minimize2 className="versa-widget-icon-md" />
                 ) : (
-                  <Maximize2 className="w-5 h-5" />
+                  <Maximize2 className="versa-widget-icon-md" />
                 )}
               </button>
               <button
@@ -763,10 +767,10 @@ export function VersaChatWidget({
                   setIsExpanded(false);
                   setIsAgentMenuOpen(false);
                 }}
-                className="p-1.5 rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
+                className="versa-widget-icon-button rounded-none transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
                 aria-label="Close chat"
               >
-                <X className="w-5 h-5" />
+                <X className="versa-widget-icon-md" />
               </button>
             </div>
           </div>
@@ -774,13 +778,13 @@ export function VersaChatWidget({
           {/* Chat Content */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto bg-white p-4 space-y-4">
+              <div className="versa-widget-messages flex-1 space-y-4 overflow-y-auto bg-white">
                 {renderedMessages}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <div className="flex-shrink-0 border-t-2 border-gray-100 bg-[#F2F3F4] p-4">
+              <div className="versa-widget-input-area flex-shrink-0 border-t-2 border-gray-100 bg-[#F2F3F4]">
                 <div className="flex items-stretch">
                   <input
                     ref={inputRef}
@@ -789,21 +793,21 @@ export function VersaChatWidget({
                     onChange={(e) => handleInputChange(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask a question..."
-                    className="h-16 flex-1 border-0 border-l-[6px] border-l-[#8B919A] bg-white px-4 text-base text-[#052049] placeholder:text-[#052049] focus:outline-none"
+                    className="versa-widget-input flex-1 border-0 border-l-[6px] border-l-[#8B919A] bg-white text-[#052049] placeholder:text-[#052049] focus:outline-none"
                   />
                   <button
                     onClick={() => handleSendMessage()}
                     disabled={!inputValue.trim()}
-                    className="flex h-16 w-16 items-center justify-center bg-[#3C69D9] text-white rounded-none hover:bg-[#2F58BE] transition-[color,background-color,border-color,text-decoration-color,fill,stroke] focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-[#006BE9] focus-visible:outline-offset-[3px] focus-visible:ring-[3px] focus-visible:ring-white disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    className="versa-widget-send-button flex flex-shrink-0 items-center justify-center rounded-none bg-[#3C69D9] text-white transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[#2F58BE] focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-[#006BE9] focus-visible:outline-offset-[3px] focus-visible:ring-[3px] focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Send message"
                   >
-                    <Send className="h-6 w-6" strokeWidth={2.2} />
+                    <Send className="versa-widget-icon-lg" strokeWidth={2.2} />
                   </button>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">
+                    <span className="versa-widget-meta-label font-semibold uppercase tracking-[0.08em] text-[#506380]">
                       Suggested prompts
                     </span>
                     <button
@@ -838,10 +842,10 @@ export function VersaChatWidget({
                         <button
                           key={prompt}
                           onClick={() => handleSendMessage(prompt)}
-                          className="flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-base text-[#506380] transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[rgba(80,99,128,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
+                          className="versa-widget-prompt-button flex w-full items-start gap-3 bg-[#F2F3F4] px-3 py-2 text-left text-[#506380] transition-[color,background-color,border-color,text-decoration-color,fill,stroke] hover:bg-[rgba(80,99,128,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1"
                         >
                           <MessageSquareMore
-                            className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#506380]"
+                            className="versa-widget-icon-sm mt-0.5 flex-shrink-0 text-[#506380]"
                             strokeWidth={2.1}
                           />
                           <span>{prompt}</span>
@@ -851,7 +855,7 @@ export function VersaChatWidget({
                   </div>
                 </div>
 
-                <p className="mt-4 text-center text-sm leading-tight text-[#475467]">
+                <p className="versa-widget-footnote mt-4 text-center leading-tight text-[#475467]">
                   AI responses may vary. Always verify critical information.
                 </p>
               </div>
@@ -912,22 +916,22 @@ export function VersaChatWidget({
             setIsOpen(true);
           }}
           style={showBlueMinimizedTrigger ? undefined : { width: '88px', height: '88px' }}
-          className={`group fixed bottom-6 right-6 transition-all duration-300 flex items-center justify-center z-40 shadow-xl ${
+          className={`versa-widget-launcher group fixed z-40 flex items-center justify-center shadow-xl transition-all duration-300 ${
             showBlueMinimizedTrigger
-              ? "rounded-full bg-[#006BE9] px-5 py-4 gap-3 text-white hover:scale-105"
+              ? "rounded-full bg-[#006BE9] text-white hover:scale-105"
               : "rounded-full bg-white border-2 border-gray-200 hover:scale-110 animate-pulse-twice"
           }`}
           aria-label="Open AI Assistant"
         >
           {showBlueMinimizedTrigger ? (
             <>
-              <MessageSquare className="h-8 w-8 flex-shrink-0 text-white" strokeWidth={2.1} />
-              <span className="whitespace-nowrap text-[18px] font-semibold leading-none text-white">
+              <MessageSquare className="versa-widget-icon-xl flex-shrink-0 text-white" strokeWidth={2.1} />
+              <span className="versa-widget-launcher-label whitespace-nowrap font-semibold leading-none text-white">
                 Ask a Question
               </span>
             </>
           ) : (
-            <MessageSquare className="h-8 w-8 text-[#006BE9]" strokeWidth={2.1} />
+            <MessageSquare className="versa-widget-icon-xl text-[#006BE9]" strokeWidth={2.1} />
           )}
           {!showBlueMinimizedTrigger && launcherTooltip}
         </button>

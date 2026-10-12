@@ -49,6 +49,179 @@ input[placeholder="Ask a question..."]:focus-visible {
   pointer-events: none;
 }
 
+:root {
+  --versa-widget-offset: clamp(0.75rem, 1.8vw, 1.5rem);
+  --versa-widget-radius: clamp(0.75rem, 1vw, 1rem);
+  --versa-widget-card-width: min(clamp(20rem, 32vw, 28rem), calc(100vw - 1.5rem));
+  --versa-widget-chat-width: clamp(23rem, 34vw, 30.625rem);
+  --versa-widget-chat-width-expanded: clamp(34rem, 58vw, 53.125rem);
+  --versa-widget-chat-height: min(85vh, clamp(34rem, 72vh, 50rem));
+  --versa-widget-control-size: clamp(3.25rem, 5vw, 4rem);
+  --versa-widget-padding-sm: clamp(0.75rem, 1vw, 1rem);
+  --versa-widget-padding-md: clamp(1rem, 1.6vw, 1.25rem);
+  --versa-widget-padding-lg: clamp(1.25rem, 2vw, 1.5rem);
+  --versa-widget-padding-xl: clamp(1.375rem, 2.5vw, 1.875rem);
+  --versa-widget-text-sm: clamp(0.8125rem, 0.74rem + 0.15vw, 0.875rem);
+  --versa-widget-text-base: clamp(0.95rem, 0.88rem + 0.18vw, 1rem);
+  --versa-widget-text-lg: clamp(1rem, 0.92rem + 0.35vw, 1.125rem);
+  --versa-widget-text-xl: clamp(1.625rem, 1.15rem + 1.1vw, 2.5rem);
+  --versa-widget-icon-sm: clamp(0.875rem, 1vw, 1rem);
+  --versa-widget-icon-md: clamp(1rem, 1.4vw, 1.25rem);
+  --versa-widget-icon-lg: clamp(1.35rem, 2vw, 1.75rem);
+  --versa-widget-icon-xl: clamp(1.75rem, 2.5vw, 2rem);
+}
+
+.versa-widget-auth-card,
+.versa-widget-launcher {
+  right: var(--versa-widget-offset);
+  bottom: var(--versa-widget-offset);
+}
+
+.versa-widget-auth-card {
+  width: var(--versa-widget-card-width);
+}
+
+.versa-widget-auth-header {
+  padding: var(--versa-widget-padding-xl);
+  padding-top: max(var(--versa-widget-padding-lg), 1.375rem);
+  padding-bottom: max(var(--versa-widget-padding-lg), 1.25rem);
+}
+
+.versa-widget-auth-close {
+  top: clamp(0.85rem, 1.6vw, 1.125rem);
+  right: clamp(0.85rem, 1.6vw, 1.375rem);
+}
+
+.versa-widget-auth-badge {
+  width: clamp(3.25rem, 5vw, 4rem);
+  height: clamp(3.25rem, 5vw, 4rem);
+}
+
+.versa-widget-auth-badge-icon {
+  width: clamp(1.75rem, 2.8vw, 2.375rem);
+  height: clamp(1.625rem, 2.6vw, 2.1875rem);
+}
+
+.versa-widget-auth-body {
+  padding: var(--versa-widget-padding-xl);
+}
+
+.versa-widget-auth-title {
+  font-size: var(--versa-widget-text-xl);
+}
+
+.versa-widget-auth-copy {
+  margin-top: clamp(1rem, 2vw, 1.875rem);
+  max-width: 24rem;
+  font-size: var(--versa-widget-text-base);
+}
+
+.versa-widget-auth-cta {
+  margin-top: clamp(1.25rem, 2.2vw, 2.125rem);
+}
+
+.versa-widget-launcher {
+  gap: clamp(0.625rem, 1vw, 0.75rem);
+  padding: var(--versa-widget-padding-md) var(--versa-widget-padding-lg);
+}
+
+.versa-widget-launcher-label {
+  font-size: var(--versa-widget-text-lg);
+}
+
+.versa-widget-chat {
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.versa-widget-header {
+  padding: var(--versa-widget-padding-md);
+}
+
+.versa-widget-header-title {
+  font-size: var(--versa-widget-text-lg);
+}
+
+.versa-widget-dropdown {
+  width: min(clamp(18rem, 28vw, 22.5rem), calc(100vw - 2rem));
+}
+
+.versa-widget-messages {
+  padding: var(--versa-widget-padding-md);
+}
+
+.versa-widget-input-area {
+  padding: var(--versa-widget-padding-md);
+}
+
+.versa-widget-input {
+  height: var(--versa-widget-control-size);
+  padding-inline: var(--versa-widget-padding-md);
+  font-size: var(--versa-widget-text-base);
+}
+
+.versa-widget-send-button {
+  width: var(--versa-widget-control-size);
+  height: var(--versa-widget-control-size);
+}
+
+.versa-widget-meta-label {
+  font-size: var(--versa-widget-text-sm);
+}
+
+.versa-widget-prompt-button {
+  font-size: var(--versa-widget-text-base);
+}
+
+.versa-widget-footnote {
+  font-size: clamp(0.8125rem, 0.76rem + 0.12vw, 0.875rem);
+}
+
+.versa-widget-icon-button {
+  padding: clamp(0.35rem, 0.75vw, 0.5rem);
+}
+
+.versa-widget-icon-sm {
+  width: var(--versa-widget-icon-sm);
+  height: var(--versa-widget-icon-sm);
+}
+
+.versa-widget-icon-md {
+  width: var(--versa-widget-icon-md);
+  height: var(--versa-widget-icon-md);
+}
+
+.versa-widget-icon-lg {
+  width: var(--versa-widget-icon-lg);
+  height: var(--versa-widget-icon-lg);
+}
+
+.versa-widget-icon-xl {
+  width: var(--versa-widget-icon-xl);
+  height: var(--versa-widget-icon-xl);
+}
+
+@media (min-width: 768px) {
+  .versa-widget-chat {
+    inset: auto var(--versa-widget-offset) var(--versa-widget-offset) auto;
+    height: var(--versa-widget-chat-height);
+    border-top-left-radius: var(--versa-widget-radius);
+    border-top-right-radius: var(--versa-widget-radius);
+    border-bottom-left-radius: var(--versa-widget-radius);
+    border-bottom-right-radius: var(--versa-widget-radius);
+  }
+
+  .versa-widget-chat-default {
+    width: var(--versa-widget-chat-width);
+  }
+
+  .versa-widget-chat-expanded {
+    width: var(--versa-widget-chat-width-expanded);
+  }
+}
+
 @keyframes gentle-pulse {
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 107, 233, 0.5); }
   50% { transform: scale(1.2); box-shadow: 0 0 0 20px rgba(0, 107, 233, 0); }
