@@ -106,7 +106,7 @@ const screenshotSections = [
       },
     ],
     eyebrow: "Screenshot 01",
-    src: "/annotated-tour/landing-guest-card.png",
+    src: "/annotated-tour/landing-guest-card-updated.png",
     title: "Logging in",
   },
   {
@@ -216,7 +216,7 @@ export default function StyleGuidePage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/"
-              className="rounded-full border-2 border-[#006BE9] bg-[#006BE9] px-5 py-3 text-[15px] font-semibold text-white transition-colors hover:border-[#0F388A] hover:bg-[#0F388A]"
+              className="rounded-none border-[3px] border-[#006BE9] bg-transparent px-6 py-2.5 text-[18.66px] font-medium text-white transition-all hover:bg-[#006BE9] hover:text-white active:border-[#052049] active:bg-[#052049] active:text-white focus-visible:bg-[#006BE9] focus-visible:text-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#006BE9] focus-visible:outline-offset-[3px]"
             >
               Return to Demo
             </Link>

@@ -224,7 +224,7 @@ export function VersaChatWidget({
     ...scopedAgentOptions.filter((agent) => agent.id === activeAgent.id),
     ...scopedAgentOptions.filter((agent) => agent.id !== activeAgent.id),
   ];
-  const promptSuggestions = activeExperience.prompts;
+  const promptSuggestions = activeExperience.prompts.slice(0, 2);
   const promptSuggestionsKey = `${normalizedContextKey}::${activeAgent.id}::${promptSuggestions.join("||")}`;
   const showSuggestions = hiddenSuggestionsKey !== promptSuggestionsKey;
   const clearPendingResponses = () => {
@@ -447,15 +447,12 @@ export function VersaChatWidget({
 
   const renderedMessages =
     messages.length === 0 ? (
-      <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
+      <div className="flex h-full min-h-0 flex-col items-center justify-center px-8 py-2 text-center">
         {renderAgentBadge(activeAgent, "empty")}
-        <h3 className="mt-5 text-[clamp(1.75rem,2vw+1rem,2rem)] font-semibold leading-none text-[#052049]">
+        <h3 className="mt-3 text-[clamp(1.75rem,2vw+1rem,2rem)] font-semibold leading-none text-[#052049]">
           {activeAgent.name}
         </h3>
-        <p className="mt-4 text-[clamp(1.125rem,1vw+0.9rem,1.25rem)] font-semibold leading-tight text-[#052049]">
-          {activeExperience.title}
-        </p>
-        <p className="mx-auto mt-3 max-w-[360px] text-[clamp(0.95rem,0.85rem+0.2vw,1rem)] leading-[1.5] text-[#506380]">
+        <p className="mx-auto mt-2 max-w-[360px] text-[clamp(0.95rem,0.85rem+0.2vw,1rem)] leading-[1.35] text-[#506380]">
           {activeExperience.introBody}
         </p>
       </div>
@@ -591,7 +588,7 @@ export function VersaChatWidget({
                 <Button
                   variant="primary"
                   onClick={handleNonAuthAuthenticate}
-                  className="!h-auto !w-full !rounded-full !border-2 !py-[11px] !text-[16px] !font-semibold !leading-none"
+                  className="!h-auto !w-full !rounded-none !border-2 !py-4 !text-[16px] !font-semibold !leading-none"
                   aria-label="Log In via MyAccess"
                 >
                   Log In via MyAccess
@@ -778,7 +775,9 @@ export function VersaChatWidget({
           {/* Chat Content */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Messages */}
-              <div className="versa-widget-messages flex-1 space-y-4 overflow-y-auto bg-white">
+              <div className={`versa-widget-messages flex-1 space-y-4 bg-white ${
+                messages.length > 0 ? "overflow-y-auto" : "overflow-hidden"
+              }`}>
                 {renderedMessages}
                 <div ref={messagesEndRef} />
               </div>
@@ -805,7 +804,7 @@ export function VersaChatWidget({
                   </button>
                 </div>
 
-                <div className="mt-4 space-y-3">
+                <div className={`mt-4 ${showSuggestions ? "space-y-3" : "space-y-0"}`}>
                   <div className="flex items-center justify-between px-1">
                     <span className="versa-widget-meta-label font-semibold uppercase tracking-[0.08em] text-[#506380]">
                       Suggested prompts
@@ -833,11 +832,11 @@ export function VersaChatWidget({
                   </div>
 
                   <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out focus-within:overflow-visible ${
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
                       showSuggestions ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
                     }`}
                   >
-                    <div className="space-y-2 pb-1">
+                    <div className="space-y-2 p-1">
                       {promptSuggestions.map((prompt) => (
                         <button
                           key={prompt}
@@ -886,7 +885,7 @@ export function VersaChatWidget({
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder="Share your thoughts..."
-                className="w-full min-h-[140px] p-4 bg-gray-50 border-2 border-gray-100 rounded-none text-[16px] focus:outline-none focus:ring-2 focus:ring-[#006BE9]/20 focus:border-[#006BE9] transition-all resize-none mb-8"
+                className="w-full min-h-[140px] p-4 bg-gray-50 border-2 border-gray-100 rounded-none text-[16px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-1 transition-all resize-none mb-8"
                 autoFocus
               />
               

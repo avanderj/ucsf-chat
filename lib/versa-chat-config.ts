@@ -76,7 +76,6 @@ export const defaultAgentId = scopedAgentOptions[0].id;
 
 export const defaultDigitalA11yPrompts = [
   "How do I make a PDF accessible?",
-  "What accessibility issues are highest risk for websites?",
   "Where can I find live help and training?",
   "Show me the main accessibility resources and FAQs.",
 ];

@@ -8,7 +8,7 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 primary:
-                    "font-medium bg-transparent text-[#052049] border-3 border-[#006BE9] tracking-normal hover:bg-[#006BE9] hover:text-white active:bg-[#4CA0FF]",
+                    "font-medium bg-transparent text-[#052049] border-3 border-[#006BE9] tracking-normal hover:bg-[#006BE9] hover:text-white active:bg-[#052049] active:border-[#052049] active:text-white",
 
                 primarySolid:
                     "font-medium bg-[#006BE9] text-white border-3 border-[#006BE9] tracking-normal hover:bg-[#0F388A] hover:border-[#0F388A] hover:text-white active:bg-[#052049] active:border-[#052049]",
@@ -17,7 +17,7 @@ const buttonVariants = cva(
                     "font-medium text-[#006BE9] hover:text-[#0F388A] hover:bg-transparent active:text-[#006BE9]",
 
                 secondaryDark:
-                    "font-medium bg-transparent border-2 border-white text-white hover:bg-white/10 hover:border-white active:bg-white/20 active:text-white focus-visible:outline-white",
+                    "font-medium bg-transparent border-2 border-white text-white hover:bg-white/10 hover:border-white active:bg-[#052049] active:border-[#052049] active:text-white focus-visible:outline-white",
 
                 ghost:
                     "font-medium hover:bg-gray-100 text-[#052049]",
