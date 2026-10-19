@@ -160,7 +160,7 @@ export default function DesignLanguagePage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="flex min-h-44 flex-col justify-between rounded-none bg-white p-5">
                     <p className="text-[15px] font-semibold text-[#052049]">Primary action</p>
-                    <button type="button" className="w-full rounded-full border-2 border-[#006BE9] bg-transparent px-5 py-3 text-base font-semibold text-[#052049] hover:bg-[#006BE9] hover:text-white active:border-[#052049] active:bg-[#052049] active:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2">
+                    <button type="button" className="inline-flex w-full cursor-pointer items-center justify-center border-3 border-[#006BE9] bg-transparent px-6 py-2.5 text-[18.66px] font-medium tracking-normal text-[#052049] transition-all hover:bg-[#006BE9] hover:text-white active:border-[#052049] active:bg-[#052049] active:text-white focus-visible:bg-[#006BE9] focus-visible:text-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#006BE9] focus-visible:outline-offset-[3px]">
                       Log In via MyAccess
                     </button>
                   </div>
@@ -197,11 +197,11 @@ export default function DesignLanguagePage() {
               <div className="mt-6 space-y-3 lg:mt-0">
                 <div className="rounded-none bg-[#FBFDFF] p-4">
                   <p className="text-[15px] font-semibold text-[#052049]">Primary action</p>
-                  <p className="mt-3 text-[15px] leading-[1.55] text-[#506380]">The login action uses a blue outline, rounded shape, and clear action label.</p>
+                  <p className="mt-3 text-[15px] leading-[1.55] text-[#506380]">Primary buttons are square with a 3 px blue outline. Hover fills the button blue; press fills it navy. Keyboard focus adds a 3 px blue outline with a 3 px offset.</p>
                 </div>
                 <div className="rounded-none bg-[#FBFDFF] p-4">
                   <p className="text-[15px] font-semibold text-[#052049]">Focus and feedback</p>
-                  <p className="mt-3 text-[15px] leading-[1.55] text-[#506380]">A 2 px blue outline with a 1 px offset marks keyboard focus on buttons, inputs, and the feedback text area. Selected feedback uses a pale blue fill and blue border.</p>
+                  <p className="mt-3 text-[15px] leading-[1.55] text-[#506380]">Inputs and the feedback text area use a 2 px blue outline with a 1 px offset on focus. Selected feedback uses a pale blue fill and blue border.</p>
                 </div>
               </div>
             </div>
