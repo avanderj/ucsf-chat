@@ -557,10 +557,10 @@ export function VersaChatWidget({
             <div className="versa-widget-auth-header relative bg-[#006BE9] text-white">
               <button
                 onClick={() => setIsAuthCardDismissed(true)}
-                className="versa-widget-auth-close versa-widget-icon-button absolute rounded-none text-white/90 transition-colors hover:text-white"
+                className="versa-widget-auth-close versa-widget-icon-button absolute rounded-none text-white/90 transition-colors hover:text-white focus-visible:rounded-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
                 aria-label="Dismiss AI Assistant card"
               >
-                <X className="versa-widget-icon-xl" strokeWidth={2} />
+                <X className="versa-widget-icon-xl" strokeWidth={1.5} />
               </button>
 
               <div className="flex flex-col items-center justify-center gap-3 pt-2 text-center">
