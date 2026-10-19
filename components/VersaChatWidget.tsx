@@ -500,7 +500,7 @@ export function VersaChatWidget({
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleFeedback(message.id, "helpful")}
-                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2 ${
                             message.feedback === "helpful"
                               ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]"
                               : "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
@@ -512,7 +512,7 @@ export function VersaChatWidget({
                         </button>
                         <button
                           onClick={() => handleFeedback(message.id, "unhelpful")}
-                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                          className={`border rounded-none p-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2 ${
                             message.feedback === "unhelpful"
                               ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]"
                               : "border-transparent text-[#506380] hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049]"
@@ -527,7 +527,7 @@ export function VersaChatWidget({
 
                     <button
                       onClick={() => handleCopyMessage(message.id, message.text)}
-                      className={`border rounded-none p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2 ${
+                      className={`border rounded-none p-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2 ${
                         copiedId === message.id
                           ? "border-transparent text-[#052049]"
                         : message.sender === "user"

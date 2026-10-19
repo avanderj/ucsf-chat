@@ -177,7 +177,7 @@ export default function DesignLanguagePage() {
                     <p className="text-[15px] font-semibold text-[#052049]">Response actions</p>
                     <div className="flex items-center gap-2">
                       {[ThumbsUp, ThumbsDown, Copy].map((Icon, index) => (
-                        <button key={index} type="button" aria-label={["Helpful", "Not helpful", "Copy"][index]} className={`border p-2 text-[#506380] hover:bg-[#F2F3F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] ${index === 0 ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]" : "border-transparent"}`}>
+                        <button key={index} type="button" aria-label={["Helpful", "Not helpful", "Copy"][index]} className={`rounded-none border p-2 text-[#506380] hover:bg-[#F2F3F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2 ${index === 0 ? "border-[#178CCB] bg-[#E2F4FC] text-[#052049]" : "border-transparent"}`}>
                           <Icon className="h-4 w-4" />
                         </button>
                       ))}
@@ -219,9 +219,9 @@ export default function DesignLanguagePage() {
                     <p className="text-base leading-relaxed">I can help you find accessibility guidance and the right resources.</p>
                     <div className="mt-3 flex items-center gap-2 pt-1 text-[14px] font-medium text-[#506380]">
                       <span>10:42 AM</span>
-                      <button type="button" aria-label="Helpful" className="ml-1 p-1.5 hover:bg-[#E7EAED]"><ThumbsUp className="h-3.5 w-3.5" /></button>
-                      <button type="button" aria-label="Not helpful" className="p-1.5 hover:bg-[#E7EAED]"><ThumbsDown className="h-3.5 w-3.5" /></button>
-                      <button type="button" aria-label="Copy assistant response" className="rounded-none p-1.5 text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2"><Copy className="h-3.5 w-3.5" /></button>
+                      <button type="button" aria-label="Helpful" className="ml-1 rounded-none p-1.5 transition-colors hover:bg-[#E7EAED] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2"><ThumbsUp className="h-3.5 w-3.5" /></button>
+                      <button type="button" aria-label="Not helpful" className="rounded-none p-1.5 transition-colors hover:bg-[#E7EAED] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2"><ThumbsDown className="h-3.5 w-3.5" /></button>
+                      <button type="button" aria-label="Copy assistant response" className="rounded-none p-1.5 text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2"><Copy className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function DesignLanguagePage() {
                     <p className="text-base leading-relaxed">Where can I find the accessibility checklist?</p>
                     <div className="mt-3 flex items-center gap-2 text-[14px] font-medium text-[#506380]">
                       <span>10:43 AM</span>
-                      <button type="button" aria-label="Copy user message" title="Copy" className="rounded-none p-1.5 text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006BE9] focus-visible:ring-offset-2">
+                      <button type="button" aria-label="Copy user message" title="Copy" className="rounded-none p-1.5 text-[#506380] transition-colors hover:bg-[rgba(80,99,128,0.12)] hover:text-[#052049] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#006BE9] focus-visible:outline-offset-2">
                         <Copy className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -245,8 +245,8 @@ export default function DesignLanguagePage() {
               Suggested prompts offer a clear starting point. Agent badges share a circular shape, with a white badge for the umbrella assistant and blue for specialized agents.
             </SectionHeading>
             <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1.45fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1.55fr)_360px]">
-              <div className="rounded-none bg-[#EAF3FF] p-3 md:p-4">
-                <div className="rounded-none bg-white p-5 md:p-6">
+              <div className="rounded-none bg-[#F2F3F4] p-3 md:p-4">
+                <div className="rounded-none bg-[#F2F3F4] p-5 md:p-6">
                   <div className="flex items-center justify-between">
                     <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#506380]">Suggested prompts</p>
                     <div role="switch" aria-checked="true" aria-label="Suggested prompts shown" className="relative flex h-4 w-7 items-center rounded-full bg-[#006BE9]">
